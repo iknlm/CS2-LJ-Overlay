@@ -5,6 +5,18 @@ Development assistance: **Claude (Anthropic), ChatGPT (OpenAI), Codex (OpenAI)**
 
 A lightweight **Windows x64** WinAPI/GDI HUD for CS2KZ / CYBERSHOKE jump stats. It reads CS2's `console.log` when the game is launched with `-condebug`; it does **not** inject into the game.
 
+## Screenshots / Скриншоты
+
+Real HUD captures from CS2 sessions (counters and settings may differ between versions).
+
+**Classic CS 1.6 / GoldSrc** — olive palette, compact tables and rank colors:
+
+![CS2 LJ Overlay in classic CS 1.6 theme](docs/screenshots/hud-cs16.png)
+
+**Modern** — the same jump statistics with the modern dark theme:
+
+![CS2 LJ Overlay in Modern theme](docs/screenshots/hud-modern.png)
+
 ## Features
 
 - Jump distance, strafes, sync, Pre/Max Speed, JumpEdge, DeadAir, Deviation, and key/mouse timeline.
