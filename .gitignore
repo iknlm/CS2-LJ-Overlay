@@ -1,0 +1,36 @@
+# User and CS2 session data
+lj_overlay.ini
+lj_jumps/
+console.log
+
+# Build outputs / local archives
+*.exe
+*.exe.disabled
+*.o
+*.obj
+*.zip
+*.7z
+*.bmp
+/build/
+/release/
+/backups/
+/CommunityEdition/
+
+# Generated test artifacts and logs
+*_LOG.txt
+*_TEST.txt
+verification_test.ini
+verification_test.csv
+sound_test*.ini
+sound_test*.csv
+sound_test*.log
+hud_*.png
+runtime_*.png
+menu_*.png
+community_*.png
+*.tmp
+*.bak
+
+# IDE
+.vs/
+.vscode/
