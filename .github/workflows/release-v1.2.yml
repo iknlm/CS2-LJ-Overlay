@@ -24,6 +24,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
+          location: C:\msys64
           update: true
           install: mingw-w64-ucrt-x86_64-gcc
       - uses: actions/setup-python@v5
