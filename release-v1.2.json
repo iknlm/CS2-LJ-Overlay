@@ -5,11 +5,11 @@
   "previous_v1.1_tag": "b01321b4c27411fa76f812490afe08b2c304d8a9",
   "local_full_suite": "PASS 10 current targets + sound reload + LJ_TEST",
   "local_runtime": "PASS final ZIP and EXE with compiler paths excluded",
-  "local_tested_exe_sha256": "892fa69e409d3bf96c9ff92890d9e076bdbe849bd9443d2b200b825c7cb891cd",
+  "local_tested_exe_sha256": "1f43f3015c0314f589312ae3a3e136cb359631e5367b79c438ec123467dc7951",
   "locally_tested_files": {
     "analysis_test.cpp": "edcba561c28b769df63fcd73a89c4bf6e239516f814724d4657ac41f34232621",
     "analysis_ui_test.cpp": "f757bdfbe675a7ce45d84b98d7da972361f014b0eba74cb0a6bd9d8b070a6d21",
-    "BUILD_EXE.bat": "8d56fe23d10c5fb6d5d324cbfa8ca6e1ce4b842ad263c6b379f68eca36bf8784",
+    "BUILD_EXE.bat": "ed38aa3918172cd63b10da0798cf8b7f978088092a107b377091c5a84af357ca",
     "console_draw.h": "d863f6bfff5616489a6a0151d24781471ec67e28ce597106701ffc3290ccb7f1",
     "console_gui_test.cpp": "34c88aa7caedc7c668834cdd5d5c854a6a26e12206aac39af0cea00de522988a",
     "console_import.h": "7316adf0a31bc520c28208f90967ac02bb3882f6704113cce713b02a57d1d76d",

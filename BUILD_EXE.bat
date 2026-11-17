@@ -27,7 +27,7 @@ if not exist "lj_overlay.cpp" (
 )
 
 rem Always use the full UCRT64 compiler installation, not random g++ from PATH.
-set "MSYS_ROOT=%SystemDrive%\msys64"
+if not defined MSYS_ROOT set "MSYS_ROOT=%SystemDrive%\msys64"
 if not exist "%MSYS_ROOT%\ucrt64\bin\g++.exe" if exist "D:\msys64\ucrt64\bin\g++.exe" set "MSYS_ROOT=D:\msys64"
 if not exist "%MSYS_ROOT%\ucrt64\bin\g++.exe" if exist "%ProgramFiles%\MSYS2\ucrt64\bin\g++.exe" set "MSYS_ROOT=%ProgramFiles%\MSYS2"
 set "UCRT_BIN=%MSYS_ROOT%\ucrt64\bin"

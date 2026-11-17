@@ -1,4 +1,4 @@
-Host-injected ambient modules (checked separately from PE imports): windhawk.dll, invisible-borders_1.0.0_380245.dll, translucent-windows_1.8.2_261850.dll, libc++.whl, libunwind.whl
+Host-injected ambient modules (checked separately from PE imports): windhawk.dll, invisible-borders_1.0.0_380245.dll, translucent-windows_1.8.2_261850.dll, libunwind.whl, libc++.whl
 PASS native Windows x64 EXE starts with PATH restricted to Windows/System32; no MSYS2/compiler runtime DLL loaded. Required PE imports are validated separately; ambient host instrumentation is listed above.
 PASS initial console.log import: exact LJ/MBH names, modes and CSV.
 PASS actual Modern and CS 1.6 HWND rendering, inline theme switching and INI opacity/style persistence.

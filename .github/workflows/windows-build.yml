@@ -17,17 +17,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
+        id: msys2
         with:
           msystem: UCRT64
-          location: C:\msys64
           update: true
           install: mingw-w64-ucrt-x86_64-gcc
       - name: Build the actual Windows GUI executable
         shell: cmd
+        env:
+          MSYS_ROOT: ${{ steps.msys2.outputs.msys2-location }}
         run: BUILD_EXE.bat < nul
       - name: Run current regression tests
         shell: pwsh
-        run: ./RUN_TESTS.ps1
+        env:
+          MSYS_ROOT: ${{ steps.msys2.outputs.msys2-location }}
+        run: ./RUN_TESTS.ps1 -Compiler "$env:MSYS_ROOT/ucrt64/bin/g++.exe"
       - name: Upload build artifact (no release publication)
         uses: actions/upload-artifact@v4
         with:

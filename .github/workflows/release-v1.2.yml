@@ -22,9 +22,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: msys2/setup-msys2@v2
+        id: msys2
         with:
           msystem: UCRT64
-          location: C:\msys64
           update: true
           install: mingw-w64-ucrt-x86_64-gcc
       - uses: actions/setup-python@v5
@@ -35,6 +35,8 @@ jobs:
         run: python verify_release_gate.py
       - name: Build Windows x64 GUI
         shell: cmd
+        env:
+          MSYS_ROOT: ${{ steps.msys2.outputs.msys2-location }}
         run: BUILD_EXE.bat < nul
       - name: Check parser and core models on the release runner
         shell: msys2 {0}

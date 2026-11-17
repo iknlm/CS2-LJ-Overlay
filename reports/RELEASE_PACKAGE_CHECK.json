@@ -21,10 +21,10 @@
     "USER32.dll",
     "WINMM.dll"
   ],
-  "exe_sha256": "892fa69e409d3bf96c9ff92890d9e076bdbe849bd9443d2b200b825c7cb891cd",
+  "exe_sha256": "1f43f3015c0314f589312ae3a3e136cb359631e5367b79c438ec123467dc7951",
   "exe_bytes": 2869481,
-  "zip_bytes": 1432915,
-  "zip_sha256": "080e43ee5670b2118107d5f925884e04cbcaea0d2d9cabefaf5cca4b25dcd37e",
+  "zip_bytes": 1432914,
+  "zip_sha256": "0c4c85542bfe3a16fb9b948dbbc0b0e07de6a38e54aa0a62e21132513026f678",
   "zip_files": [
     "AUTHORS.md",
     "CHANGELOG.md",
