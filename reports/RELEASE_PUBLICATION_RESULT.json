@@ -1,0 +1,53 @@
+{
+  "result": "PASS",
+  "release_url": "https://github.com/iknlm/CS2-LJ-Overlay/releases/tag/v1.2",
+  "release_tag": "v1.2",
+  "release_target": "2f02d31aa87248896b015c9a67a4b4cc64d74d95",
+  "assets": {
+    "LJOverlay_new.exe": {
+      "url": "https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/LJOverlay_new.exe",
+      "sha256": "2b89cc6d6315a313c6c618c88cb1b384dc796c315457199a9a9ae301e309331f",
+      "bytes": 2869481,
+      "http": 200
+    },
+    "LJOverlay_v1.2_win64.zip": {
+      "url": "https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/LJOverlay_v1.2_win64.zip",
+      "sha256": "3f3ccb1267732a1c12f8e4893f4ee36f4423c9735be7aabc9ddfd76e1913faf8",
+      "bytes": 1416748,
+      "http": 200
+    },
+    "SHA256SUMS.txt": {
+      "url": "https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/SHA256SUMS.txt",
+      "sha256": "125b1fa9646e86376d76af6453527840eacd61e541a5b22657623df404b47639",
+      "bytes": 177,
+      "http": 200
+    }
+  },
+  "pe": {
+    "machine": "AMD64 (0x8664)",
+    "format": "PE32+",
+    "subsystem": "Windows GUI",
+    "imports": [
+      "ADVAPI32.dll",
+      "GDI32.dll",
+      "KERNEL32.dll",
+      "api-ms-win-crt-convert-l1-1-0.dll",
+      "api-ms-win-crt-environment-l1-1-0.dll",
+      "api-ms-win-crt-heap-l1-1-0.dll",
+      "api-ms-win-crt-locale-l1-1-0.dll",
+      "api-ms-win-crt-math-l1-1-0.dll",
+      "api-ms-win-crt-private-l1-1-0.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll",
+      "api-ms-win-crt-string-l1-1-0.dll",
+      "api-ms-win-crt-time-l1-1-0.dll",
+      "api-ms-win-crt-utility-l1-1-0.dll",
+      "SHELL32.dll",
+      "USER32.dll",
+      "WINMM.dll"
+    ],
+    "exe_sha256": "2b89cc6d6315a313c6c618c88cb1b384dc796c315457199a9a9ae301e309331f",
+    "exe_bytes": 2869481
+  },
+  "checks": "anonymous HTTP 200 and GitHub asset digests; outer/internal SHA; ZIP CRC; identical separate and bundled EXE; 11 unchanged WAVs; clean template; no personal/debris files; UTF-8 documents; MIT IKNLM; Windows x64 system-only PE imports"
+}

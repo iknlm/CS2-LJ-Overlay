@@ -21,24 +21,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: msys2/setup-msys2@v2
-        id: msys2
-        with:
-          msystem: UCRT64
-          update: true
-          install: mingw-w64-ucrt-x86_64-gcc
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
       - name: Verify source matches locally tested release gate
         shell: pwsh
         run: python verify_release_gate.py
+      - name: Inspect existing publication
+        id: publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python publish_release.py --probe-state >> $env:GITHUB_OUTPUT
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        if: steps.publication.outputs.published != 'true'
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
       - name: Build Windows x64 GUI
+        if: steps.publication.outputs.published != 'true'
         shell: cmd
         env:
           MSYS_ROOT: ${{ steps.msys2.outputs.msys2-location }}
         run: BUILD_EXE.bat < nul
       - name: Check parser and core models on the release runner
+        if: steps.publication.outputs.published != 'true'
         shell: msys2 {0}
         run: |
           set -euo pipefail
@@ -49,12 +58,14 @@ jobs:
           g++ -std=c++20 -O2 -DLJ_TEST lj_overlay.cpp -o lj_test.exe
           ./lj_test.exe sample_jump_console.log
       - name: Check actual EXE without compiler directories in PATH
+        if: steps.publication.outputs.published != 'true'
         shell: pwsh
         run: ./VERIFY_RELEASE_RUNTIME.ps1
       - name: Build and verify the player ZIP and manifests
+        if: steps.publication.outputs.published != 'true'
         shell: pwsh
         run: python prepare_release.py --output dist
-      - name: Upload verified assets and publish a separate v1.2 release
+      - name: Publish checked assets or verify the unchanged published release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}

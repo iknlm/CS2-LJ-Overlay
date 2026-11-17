@@ -1,6 +1,6 @@
 """Publish only the task-owned v1.2 draft after exact asset verification."""
 from pathlib import Path
-import hashlib,json,os,subprocess,tempfile,time,urllib.request,urllib.parse,zipfile
+import hashlib,json,os,subprocess,sys,tempfile,time,urllib.request,urllib.parse,zipfile
 
 ROOT=Path(__file__).resolve().parent
 REPO='iknlm/CS2-LJ-Overlay'
@@ -16,6 +16,29 @@ def checksum(data):return hashlib.sha256(data).hexdigest()
 def fingerprint(r):
     return {k:r[k] for k in ['id','tag_name','target_commitish','name','body','draft','prerelease','created_at','published_at','updated_at']} | {'assets':[{k:a.get(k) for k in ['id','name','size','digest','updated_at']} for a in r['assets']]}
 def main():
+    spec=json.loads((ROOT/'release-v1.2.json').read_text(encoding='utf-8'))
+    owned_id=spec.get('owned_draft_release_id')
+    current=api('repos/'+REPO+'/releases/'+str(owned_id)) if owned_id else None
+    if current and not current['draft']:
+        if current['tag_name']!=TAG or current['target_commitish']!=spec['published_release_commit']:
+            raise RuntimeError('Unexpected published v1.2 target')
+        old=api('repos/'+REPO+'/releases/tags/v1.1')
+        old_tag=api('repos/'+REPO+'/git/ref/tags/v1.1')['object']['sha']
+        baseline=fingerprint(old)
+        subprocess.run([sys.executable,str(ROOT/'VERIFY_PUBLISHED_RELEASE.py')],check=True)
+        notes=(ROOT/'RELEASE_NOTES_v1.2.md').read_text(encoding='utf-8').strip()
+        for temporary_id in spec.get('owned_temporary_draft_ids',[]):
+            if temporary_id in (current['id'],old['id']):raise RuntimeError('Unsafe temporary draft ID')
+            try:temporary=api('repos/'+REPO+'/releases/'+str(temporary_id))
+            except subprocess.CalledProcessError as error:
+                if str(json.loads(error.output or '{}').get('status'))=='404':continue
+                raise
+            if temporary['draft'] and temporary['tag_name'].startswith('untagged-') and temporary['body'].strip()==notes:
+                api('repos/'+REPO+'/releases/'+str(temporary_id),'DELETE')
+        if fingerprint(api('repos/'+REPO+'/releases/tags/v1.1'))!=baseline:raise RuntimeError('v1.1 changed')
+        if api('repos/'+REPO+'/git/ref/tags/v1.1')['object']['sha']!=old_tag:raise RuntimeError('v1.1 tag changed')
+        print('PASS existing published v1.2 verified; its assets and tags were not modified; v1.1 unchanged')
+        return
     target=os.environ['GITHUB_SHA']
     dist=ROOT/'dist'
     expected={n:checksum((dist/n).read_bytes()) for n in NAMES}
@@ -71,7 +94,7 @@ def main():
     if published['draft'] or published['tag_name']!=TAG:raise RuntimeError('Release was not published as v1.2')
     links={}
     for asset in uploaded_assets:
-        name=asset['name'];url=asset['browser_download_url'];last=None
+        name=asset['name'];url='https://github.com/'+REPO+'/releases/download/'+TAG+'/'+name;last=None
         for attempt in range(10):
             try:
                 request=urllib.request.Request(url,headers={'User-Agent':'CS2-LJ-Overlay-release-check'})
@@ -93,4 +116,10 @@ def main():
     result={'result':'PASS','tag':TAG,'commit':target,'release_url':published['html_url'],'asset_urls':links,'asset_sha256':expected,'v1.1':'unchanged','checks':'draft and public download hashes, exact asset list, v1.1 release and tag preserved'}
     (ROOT/'reports/RELEASE_PUBLICATION_RESULT.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result,indent=2))
-if __name__=='__main__':main()
+if __name__=='__main__':
+    if '--probe-state' in sys.argv:
+        spec=json.loads((ROOT/'release-v1.2.json').read_text(encoding='utf-8'))
+        current=api('repos/'+REPO+'/releases/'+str(spec['owned_draft_release_id'])) if spec.get('owned_draft_release_id') else None
+        print('published='+('true' if current and not current['draft'] else 'false'))
+    else:main()
+
