@@ -27,7 +27,7 @@
     "lj_overlay.cpp": "0a987c2b8677275f0d8b2445f0725e2a34430ad7716d84b58d3900f77b7d0ff9",
     "players_test.cpp": "6d719daef0bd4bff22a46dc87ebf29a4b31c3145ed37669f1187d1fec066b759",
     "prepare_release.py": "50a947cbc04b2ce447475c162f7bed57f3fe4c73f17e6f48ec16577b4cc28c29",
-    "publish_release.py": "85cbfdb484a5916c6abdf8b6273aee2f7ab17977a98e0dec928e1b6d25fd946c",
+    "publish_release.py": "624cd95152d957943ba0eaa43284b0d336d1289bee1a6f79dc6cd89c37059b79",
     "review_gui_test.cpp": "1114a1b41eeb2e35c5da7ef0b1a8a9553a207a33f06ff8392a6b0f740650ec2b",
     "review_model_test.cpp": "95ecfaeeefde955f1a30a3a04bd2342eed373b700cc4cd011991c0ff1487db66",
     "sound_settings_test.cpp": "c59aeda0bfea437c43f7dee8d31420081b90b4f41d862d5fda5b29c6e73549f8",
@@ -49,5 +49,6 @@
     "verify_release_gate.py": "97d3ba63db052c0651f040c5fc0c721779683988740e734598706119710e3797",
     "VERIFY_RELEASE_RUNTIME.ps1": "63c3bb9d51831d74d2fa623154bf45f084bde0cce674d870b4150173d90dfa54"
   },
-  "text_canonicalization": "CRLF converted to LF before hashing; all other bytes including BOM unchanged; WAV bytes unmodified"
+  "text_canonicalization": "CRLF converted to LF before hashing; all other bytes including BOM unchanged; WAV bytes unmodified",
+  "owned_draft_release_id": 448659418
 }

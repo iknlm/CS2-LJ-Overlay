@@ -8,8 +8,12 @@ ROOT=Path(__file__).resolve().parent
 REPO='iknlm/CS2-LJ-Overlay'
 TAG='v1.2'
 NAMES=['LJOverlay_v1.2_win64.zip','LJOverlay_new.exe','SHA256SUMS.txt']
-def api(endpoint):
-    return json.loads(subprocess.check_output(['gh','api',endpoint],text=True))
+def api(endpoint,method='GET',data=None):
+    command=['gh','api',endpoint]
+    if method!='GET':command+=['--method',method]
+    if data is not None:command+=['--input','-']
+    output=subprocess.check_output(command,input=json.dumps(data) if data is not None else None,text=True,encoding='utf-8')
+    return json.loads(output) if output.strip() else None
 def gh(*args):
     subprocess.run(['gh',*map(str,args)],check=True)
 def fingerprint(release):
@@ -39,25 +43,36 @@ def main():
     if existing and not existing['draft']:
         raise RuntimeError('Published v1.2 already exists; refusing to modify it')
     if existing:
-        if existing['target_commitish']!=target:raise RuntimeError('Existing draft targets another commit; refusing replacement')
-        if existing['assets']:raise RuntimeError('Existing draft already has assets; refusing overwrite')
+        spec=json.loads((ROOT/'release-v1.2.json').read_text(encoding='utf-8'))
+        if existing['id']!=spec.get('owned_draft_release_id'):
+            raise RuntimeError('Unrecognized existing draft; refusing changes')
+        if existing['body'].strip()!=(ROOT/'RELEASE_NOTES_v1.2.md').read_text(encoding='utf-8').strip():
+            raise RuntimeError('Draft notes changed outside this publication task')
+        if any(a['name'] not in NAMES for a in existing['assets']):
+            raise RuntimeError('Unrecognized asset in the owned draft')
+        # Only this task-created, never-published v1.2 draft may be resumed.
+        api('repos/'+REPO+'/releases/'+str(existing['id']),'PATCH',{'target_commitish':target})
+        for asset in existing['assets']:
+            api('repos/'+REPO+'/releases/assets/'+str(asset['id']),'DELETE')
     else:
         refs=api('repos/'+REPO+'/git/matching-refs/tags/v1.2')
         if any(r['ref']=='refs/tags/v1.2' for r in refs):raise RuntimeError('v1.2 tag already exists; refusing to move it')
         gh('release','create',TAG,'--repo',REPO,'--target',target,'--title','CS2 LJ Overlay v1.2 - Windows x64',
            '--notes-file',ROOT/'RELEASE_NOTES_v1.2.md','--draft')
     gh('release','upload',TAG,'--repo',REPO,*[dist/name for name in NAMES])
-    draft=api('repos/'+REPO+'/releases/tags/'+TAG)
+    draft=next(r for r in api('repos/'+REPO+'/releases?per_page=100') if r['tag_name']==TAG)
+    release_id=draft['id']
     if not draft['draft'] or {a['name'] for a in draft['assets']}!=set(NAMES):
         raise RuntimeError('Draft release asset list mismatch')
     with tempfile.TemporaryDirectory(prefix='lj-v12-verify-') as folder:
         for name in NAMES:
-            gh('release','download',TAG,'--repo',REPO,'--pattern',name,'--dir',folder)
+            asset=next(a for a in draft['assets'] if a['name']==name)
+            with (Path(folder)/name).open('wb') as output:
+                subprocess.run(['gh','api','repos/'+REPO+'/releases/assets/'+str(asset['id']),'-H','Accept: application/octet-stream'],stdout=output,check=True)
             if checksum((Path(folder)/name).read_bytes())!=expected[name]:
                 raise RuntimeError('Uploaded draft asset hash mismatch: '+name)
     # Publish only after the uploaded draft bytes match the tested local package.
-    gh('release','edit',TAG,'--repo',REPO,'--draft=false','--latest')
-    published=api('repos/'+REPO+'/releases/tags/'+TAG)
+    published=api('repos/'+REPO+'/releases/'+str(release_id),'PATCH',{'draft':False,'make_latest':'true'})
     if published['draft']:raise RuntimeError('Release remains draft')
     links={}
     for asset in published['assets']:
