@@ -2,7 +2,7 @@
 Existing published releases and tags are never overwritten or deleted.
 """
 from pathlib import Path
-import hashlib, json, os, subprocess, tempfile, time, urllib.request, zipfile
+import hashlib, json, os, subprocess, tempfile, time, urllib.request, urllib.parse, zipfile
 
 ROOT=Path(__file__).resolve().parent
 REPO='iknlm/CS2-LJ-Overlay'
@@ -57,11 +57,21 @@ def main():
     else:
         refs=api('repos/'+REPO+'/git/matching-refs/tags/v1.2')
         if any(r['ref']=='refs/tags/v1.2' for r in refs):raise RuntimeError('v1.2 tag already exists; refusing to move it')
-        gh('release','create',TAG,'--repo',REPO,'--target',target,'--title','CS2 LJ Overlay v1.2 - Windows x64',
-           '--notes-file',ROOT/'RELEASE_NOTES_v1.2.md','--draft')
-    gh('release','upload',TAG,'--repo',REPO,*[dist/name for name in NAMES])
+        api('repos/'+REPO+'/releases','POST',{'tag_name':TAG,'target_commitish':target,
+            'name':'CS2 LJ Overlay v1.2 - Windows x64','body':(ROOT/'RELEASE_NOTES_v1.2.md').read_text(encoding='utf-8'),
+            'draft':True,'prerelease':False})
     draft=next(r for r in api('repos/'+REPO+'/releases?per_page=100') if r['tag_name']==TAG)
     release_id=draft['id']
+    for name in NAMES:
+        url='https://uploads.github.com/repos/'+REPO+'/releases/'+str(release_id)+'/assets?'+urllib.parse.urlencode({'name':name})
+        request=urllib.request.Request(url,data=(dist/name).read_bytes(),method='POST',headers={
+            'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json',
+            'Content-Type':'application/zip' if name.endswith('.zip') else 'application/octet-stream',
+            'User-Agent':'CS2-LJ-Overlay-release-publisher','X-GitHub-Api-Version':'2022-11-28'})
+        with urllib.request.urlopen(request,timeout=180) as response:
+            uploaded=json.loads(response.read().decode('utf-8'))
+        if uploaded['name']!=name:raise RuntimeError('Upload returned the wrong asset name')
+    draft=api('repos/'+REPO+'/releases/'+str(release_id))
     if not draft['draft'] or {a['name'] for a in draft['assets']}!=set(NAMES):
         raise RuntimeError('Draft release asset list mismatch')
     with tempfile.TemporaryDirectory(prefix='lj-v12-verify-') as folder:
