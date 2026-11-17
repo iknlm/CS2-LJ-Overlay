@@ -1,0 +1,37 @@
+[
+  {
+    "file": "reports/provenance/CONSOLE_GUI_TEST_LOG.txt",
+    "original_encoding": "UTF-16LE BOM",
+    "conversion": "strict, lossless Unicode roundtrip before requested path redaction",
+    "original_bytes_sha256": "e32ced2c78833a5adbef3d52898906720292da063010c2addbfdf63d2c89488f",
+    "utf8_before_redaction_sha256": "a66b1cd4116edae3a78d0a156a51a4c7cde6098fd88b9f7a2d626f172f8b335b"
+  },
+  {
+    "file": "reports/provenance/GOALS_REGRESSION_LOG.txt",
+    "original_encoding": "UTF-16LE BOM",
+    "conversion": "strict, lossless Unicode roundtrip before requested path redaction",
+    "original_bytes_sha256": "353e9ffac01de06785f3e582c26d10311ae4a9dae2ee2c1839c71ba75c66f657",
+    "utf8_before_redaction_sha256": "04cd6fc2a61c85348fd1fb05926713ce96ee114a853cff4603f1e60a4e36f2f8"
+  },
+  {
+    "file": "reports/provenance/PLAYERS_EXE_SMOKE_LOG.txt",
+    "original_encoding": "UTF-16LE BOM",
+    "conversion": "strict, lossless Unicode roundtrip before requested path redaction",
+    "original_bytes_sha256": "000c3950a4e36e4665b06e2ca049bb77ba4e03902e3b188be87b32850f44262c",
+    "utf8_before_redaction_sha256": "79ef53c784d59313f81c4c5338bd0959c34855e6e74a5a62a700d242ef6a10ac"
+  },
+  {
+    "file": "reports/provenance/PLAYERS_FINAL_GUI_LOG.txt",
+    "original_encoding": "UTF-16LE BOM",
+    "conversion": "strict, lossless Unicode roundtrip before requested path redaction",
+    "original_bytes_sha256": "67c78c3f02886721e01287a60d0dd86a679a368738f3d9e92e0b7707bec3c9cd",
+    "utf8_before_redaction_sha256": "c8c67f86ed93c781038fb4d19a35f451f226d0e528445ea81909e94985fe18a3"
+  },
+  {
+    "file": "reports/provenance/PLAYERS_FINAL_IMPORT_PASS_LOG.txt",
+    "original_encoding": "UTF-16LE BOM",
+    "conversion": "strict, lossless Unicode roundtrip before requested path redaction",
+    "original_bytes_sha256": "4867d39144449f72a93911165b38d6334a31fba637664f952706b0e22531a932",
+    "utf8_before_redaction_sha256": "8f7c1841edaedb8253d51bb88dda0b98e8cdd5e153bfa45a198ab27cef1513b2"
+  }
+]

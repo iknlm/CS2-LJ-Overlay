@@ -1,17 +1,21 @@
-# Authors and acknowledgments
+# Authors / Авторство
 
-**IKNLM** ([@iknlm](https://github.com/iknlm)) — **original project author, creator, owner and maintainer**. Concept, requirements, design direction, testing in CS2 and release decisions.
+**IKNLM — основной автор, создатель и владелец CS2 LJ Overlay.**
 
-## AI-assisted development
+**IKNLM is the primary author, creator and owner of CS2 LJ Overlay.**
 
-The project was developed with assistance from:
+Исходный код: **MIT © 2026 IKNLM**. См. [LICENSE](LICENSE).
+Project source code: **MIT © 2026 IKNLM**.
 
-- **Claude (Anthropic)** — early prototyping and programming assistance.
-- **ChatGPT (OpenAI)** — architecture discussions, UI design iterations, code guidance and release preparation.
-- **Codex (OpenAI)** — source changes, Windows builds, automated tests and packaging.
+Claude, ChatGPT и Codex указаны исключительно как помощники разработки,
+а не авторы, создатели или владельцы проекта.
+Claude, ChatGPT and Codex are credited exclusively as development assistants,
+not as project authors, creators or owners.
 
-These are acknowledgments of development tools, **not joint project ownership or copyright claims**. Project direction and release decisions remain with IKNLM.
+Авторство и лицензии сторонних звуков сохраняются отдельно.
+Antti Saari записал звуки диктора, TripleSnail выполнил обработку.
+Third-party sound authors retain their credits and asset licenses:
+Antti Saari recorded the announcer audio; TripleSnail edited it.
 
-## Audio and third-party notices
-
-`Godlike.wav` and `Ownage.wav` are from *Announcer Kill Sounds* (recorded by Antti Saari, edited by TripleSnail), under **CC BY 3.0**. The other nine WAV effects are generated CC0 replacements. See [SOUND_CREDITS.txt](SOUND_CREDITS.txt) and the `licenses/` directory for details. These assets are **not** covered by the project's MIT license. Valve assets are not included.
+См. [SOUND_CREDITS.txt](SOUND_CREDITS.txt) и
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

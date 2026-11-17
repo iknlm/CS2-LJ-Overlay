@@ -9,13 +9,14 @@ Godlike, KillingSpree, Massacre, Mayhem, MegaKill, Ownage, Rampage, TripleKill.
 No endorsement by the authors is implied.
 
 All other sounds in sounds/: original procedural synthesis for LJOverlay,
-created by Codex, 2026. Released under CC0 1.0 Universal:
+LJOverlay project, 2026; IKNLM is the project creator and owner.
+Codex is credited only for development assistance. Released under CC0 1.0 Universal:
 https://creativecommons.org/publicdomain/zero/1.0/
 Generator: generate_sounds.py. These are stylistic substitutes, not Valve assets.
 wpn_*.wav names are compatibility names only.
 Meh: error; Impressive: tick; Perfect: success; Wrecker: achievement.
 
-Verified 2026-11-16 against the OpenGameArt source page.
+Rechecked 2026-11-17 against the OpenGameArt source page.
 Godlike.wav and Ownage.wav match the locally extracted original files byte for byte.
 License texts: licenses/CC-BY-3.0.txt and licenses/CC0-1.0.txt.
 These asset licenses do not license the application source code.

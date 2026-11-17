@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 IKNLM
 #include "lj_overlay.cpp"
 #include <cassert>
 int main(int argc,char** argv) {

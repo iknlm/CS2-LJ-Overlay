@@ -1,0 +1,27 @@
+PASS exact sample names/distances/types; bracket CKZ/KZT; mixed players/equal distances; Unicode/special/long nicknames; anonymous compact stays unknown; CSV name+ID and report
+PASS snapshot cold restore name+original ID+marks+metrics, replay/import/reinitialized Tailer and repeated stamped header without duplicates
+PASS restore with missing console; corrupted snapshot rejected without partial mutation
+PASS filtered foreign header/details and unnamed summary cannot rename/update last user jump
+PASS equal source/header/time/player/distance/type in three different modes remains three attempts; shifted replay resolves by mode without duplicates
+GDI snapshot players_modern.bmp 500x686
+GDI snapshot players_modern_analysis.bmp 500x812
+GDI snapshot players_modern_long.bmp 500x686
+GDI snapshot players_modern_long_analysis.bmp 500x840
+GDI snapshot players_modern_unknown.bmp 500x667
+GDI snapshot players_cs16.bmp 590x621
+GDI snapshot players_cs16_analysis.bmp 590x738
+GDI snapshot players_cs16_long.bmp 590x621
+GDI snapshot players_cs16_long_analysis.bmp 590x764
+GDI snapshot players_cs16_unknown.bmp 590x601
+PASS actual GDI both themes: selected matching name/type/ID, history player column, analysis player, Unicode-safe ellipsis and unknown player
+PASS explicit new session persists empty history without reusing IDs
+PASS full initial history, chronology/timestamps, all metrics, -nan, duplicate timestamped blocks, replay/reinitialized Tailer, marks/selection/CSV retained, historical commands ignored
+PASS live partial header, split UTF-8/newline, late block continuation, row/key upserts, analysis invalidation, distinct equal-valued attempts
+PASS clear/truncate/deletion/recreation, same-inode truncate/regrow and replacement identity, preserved existing history
+PASS concurrent writer remains open, sharing error/recovery, cold restart imports current file once
+PASS compact JS input, unknown mode stays unknown, compact echo does not duplicate/degrade detailed record
+PASS missing first Sync metric preserves available Gain/Loss without inventing a zero
+PASS large history 11551030 bytes, byte zero through EOF in bounded polls, first/last jumps recovered; idle polls do not reread content
+PASS file import of all six ranked types x VNL/CKZ/KZT; unknown mode is not inherited
+PASS same-second session import selects an unused CSV name and preserves the existing archive
+PASS all console reader/import integration tests

@@ -1,0 +1,7 @@
+Saved console_modern_error.bmp: 529x633, pixel hash 14027407456828230363
+Saved console_modern_connected.bmp: 529x832, pixel hash 6291589500923549198
+Saved console_modern_reading.bmp: 529x974, pixel hash 15635775779834903370
+Saved console_modern_live.bmp: 529x760, pixel hash 9448989256510402446
+Saved console_cs16_live.bmp: 608x711, pixel hash 2070338921261820136
+Saved console_cs16_error_settings.bmp: 608x998, pixel hash 2861695560104299233
+PASS actual GDI statuses LOG ERROR/LOG CONNECTED/READING HISTORY/LIVE; both themes; expected source + condebug guide; inline Unicode path typing including digits, Enter/Escape, INI persistence, clipboard selection, invalid input; source switch retains selected history; exactly one window

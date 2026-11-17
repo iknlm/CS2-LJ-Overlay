@@ -1,0 +1,134 @@
+[
+  {
+    "path": "lj_overlay_updated.cpp",
+    "date": "2026-11-15T17:04:16",
+    "size": 73113,
+    "sha256": "232a735621aa55b6ad827abf2be942d584a2fd8f70b048f96bfbb17a4796ef1e",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": false,
+      "sound_system.h": false
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/backups/pre_analysis_correction/lj_overlay.cpp",
+    "date": "2026-11-16T23:08:45",
+    "size": 111704,
+    "sha256": "f0e564085aca910b22250931003ee997490092f3217b03c0be837f5efde65cdf",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": true,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/backups/pre_analyzer_v12/lj_overlay.cpp",
+    "date": "2026-11-16T17:59:07",
+    "size": 104601,
+    "sha256": "9f0f09497df18ce6154545d2a902d4bad2f8d1630c3c94b91baf974d93d2a8f0",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": false,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/backups/pre_community_20261116_175907/lj_overlay.cpp",
+    "date": "2026-11-15T23:53:31",
+    "size": 104475,
+    "sha256": "d155111bf2eb76f0cc70fbe144473b11f96f50ecfc714d2e479a086682397679",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": false,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/backups/pre_full_log_v12/lj_overlay.cpp",
+    "date": "2026-11-16T23:55:46",
+    "size": 118651,
+    "sha256": "fd5343a9d95b5f43778da37f8092d0db756827bb22c34668fae22339c5b5c8b0",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": true,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/backups/pre_full_v12/lj_overlay.cpp",
+    "date": "2026-11-16T23:19:02",
+    "size": 111698,
+    "sha256": "d324404faa314ab18e956722fc44bf3835249508893cc7ebf8c2fbd55a150d5c",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": true,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/CommunityEdition/lj_overlay.cpp",
+    "date": "2026-11-16T17:59:07",
+    "size": 104601,
+    "sha256": "9f0f09497df18ce6154545d2a902d4bad2f8d1630c3c94b91baf974d93d2a8f0",
+    "features": {
+      "jump_history_store.h": false,
+      "jump_goals.h": false,
+      "console_import.h": false,
+      "jump_analysis.h": false,
+      "sound_system.h": true
+    }
+  },
+  {
+    "path": "LJOverlay_ModernMenu_FIX2/lj_overlay.cpp",
+    "date": "2026-11-17T16:27:37",
+    "size": 127137,
+    "sha256": "c6056c307904c94aff7319378e0a47769bf548f4a428b76b1de38840d59fa12a",
+    "features": {
+      "jump_history_store.h": true,
+      "jump_goals.h": true,
+      "console_import.h": true,
+      "jump_analysis.h": true,
+      "sound_system.h": true
+    }
+  },
+  {
+    "archive": "cs2-lj-overlay.zip",
+    "member": "lj_overlay.cpp",
+    "date": [
+      2026,
+      11,
+      11,
+      23,
+      31,
+      54
+    ],
+    "size": 70273,
+    "sha256": "ca76e250b9dbea7180a2b9813d70e4dc7e2b0ff8f9a85feaab3e1b912c3f0ec5"
+  },
+  {
+    "archive": "LJOverlay_ModernMenu_FIX2/CommunityEdition.zip",
+    "member": "CommunityEdition/lj_overlay.cpp",
+    "date": [
+      2026,
+      11,
+      16,
+      17,
+      59,
+      6
+    ],
+    "size": 104601,
+    "sha256": "9f0f09497df18ce6154545d2a902d4bad2f8d1630c3c94b91baf974d93d2a8f0"
+  }
+]

@@ -1,6 +1,4 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 IKNLM
-// LJOverlay — оверлей джампстатов для CS2 (CYBERSHOKE, LJ VNL).
+﻿// LJOverlay — оверлей джампстатов для CS2 (CYBERSHOKE, LJ VNL).
 //
 // Читает game/csgo/console.log (CS2 пишет его с параметром запуска -condebug).
 // Сервер на каждый прыжок печатает в консоль блок:
@@ -24,6 +22,7 @@
 #include <shellapi.h>
 #include <mmsystem.h>
 #include <windowsx.h>
+#include <tlhelp32.h>
 #endif
 
 #include <algorithm>
@@ -164,10 +163,14 @@ struct Strafe {
     }
 };
 
+enum JumpDirection { DIR_UNKNOWN, DIR_STRAIGHT, DIR_RIGHT, DIR_LEFT };
 struct Jump {
-    std::string name, type, typeFull, time, stamp;
+    unsigned long long attemptId = 0; // Assigned outside Parser; never reused in this process.
+    JumpDirection direction = DIR_UNKNOWN; // Manual annotation, not inferred from key traces.
+    std::string name, type, typeFull, time, stamp, distanceText;
     double dist = 0;
     int mark = 0;   // Ручное переопределение: 0 авто, 1 GOOD, 2 BAD. Парсер его не меняет.
+    std::string playerName() const { return name.empty() ? "Неизвестный игрок" : name; }
     int rank() const;
     int result() const;
     const char* rankName() const;
@@ -228,10 +231,18 @@ int Jump::rank() const {
     return R_UNKNOWN;
 }
 
+#include "jump_goals.h"
+
 int Jump::result() const {
     if (mark == 1 || mark == 2) return mark;
     int r = rank();
-    return r == R_UNKNOWN ? 0 : r >= g_successRank ? 1 : 2;
+    auto policy = preference(*this);
+    if (r == R_UNKNOWN || !policy) return 0;
+    if (policy->customSuccess) {
+        auto distance = jump_decimal(*this);
+        return distance.empty() ? 0 : decimal_compare(distance, policy->minimum) >= 0 ? 1 : 2;
+    }
+    return r >= policy->successRank ? 1 : 2;
 }
 
 const char* Jump::rankName() const {
@@ -336,7 +347,7 @@ struct Parser {
         if (s.empty()) return NONE;
         std::string up = upper(s);
 
-        if (up.find("LJMARK") != std::string::npos) {
+        if (up.find("LJMARK") != std::string::npos && up.find(" JUMPED ") == std::string::npos) {
             static const std::regex mk(R"(\bLJMARK\s+(GOOD|BAD|CLEAR|LOCK|HIDE|QUIT)\b)");
             std::smatch m;
             if (std::regex_search(up, m, mk)) { cmd = lower(m[1].str()); return CMD; }
@@ -344,7 +355,7 @@ struct Parser {
 
         if (up.find(" JUMPED ") != std::string::npos) {
             static const std::regex hr(
-                R"(^(.*?)\s*\bjumped\s+(\d+(?:\.\d+)?)\s+units\s+with\s+an?\s+([A-Za-z][A-Za-z \-]*?)\s*$)",
+                R"(^(.*?)\s*\bjumped\s+(\d+(?:\.\d+)?)\s+units\s+with\s+an?\s+([A-Za-z][A-Za-z \-]*?)(?:\s+\[(VNL|CKZ|KZT)\])?\s*$)",
                 std::regex::icase);
             std::smatch m;
             if (std::regex_match(s, m, hr)) {
@@ -353,9 +364,11 @@ struct Parser {
                 if (!player.empty() && lower(name) != lower(player)) return NONE;
                 Jump j;
                 j.name = name;
+                if (m[4].matched) j.set("Mode", Val{false, NA, upper(m[4].str())});
                 j.typeFull = trim(m[3].str());
                 j.type = type_abbr(j.typeFull);
-                j.dist = strtod(m[2].str().c_str(), nullptr);
+                j.distanceText = m[2].str(); // Preserve console precision for the local report.
+                j.dist = strtod(j.distanceText.c_str(), nullptr);
                 std::tm tm = now_tm();
                 j.time = sfmt("%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
                 j.stamp = sfmt("%04d-%02d-%02d_%02d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
@@ -413,6 +426,8 @@ struct Parser {
 
 // Цветовая оценка значений: зелёный = хорошо, жёлтый = средне, красный = плохо.
 // Пороги можно поменять в ini, секция [thresholds]: ключ=хорошо,средне
+#include "console_import.h"
+
 enum Tone { T_NORM, T_GOOD, T_OK, T_BAD, T_DIM, T_PB, T_SUB, T_FAIL,
             T_MEH, T_IMPRESSIVE, T_PERFECT, T_GODLIKE, T_OWNAGE, T_WRECKER };
 static Tone rank_tone(const Jump& j) {
@@ -436,6 +451,9 @@ static Tone tone(const char* k, double v) {
     if (t.good >= t.ok) return v >= t.good ? T_GOOD : v >= t.ok ? T_OK : T_BAD;
     return v <= t.good ? T_GOOD : v <= t.ok ? T_OK : T_BAD;
 }
+
+#include "jump_analysis.h"
+#include "jump_compare.h"
 
 struct Cell {
     std::string s;
@@ -470,6 +488,7 @@ static const std::vector<TCol<Strafe>>& strafe_cols() {
 
 static const std::vector<TCol<Jump>>& hist_cols() {
     static const std::vector<TCol<Jump>> c = {
+        {"ИГРОК", "Неизвестный…", true, [](const Jump& j) { return Cell{j.playerName(), T_SUB}; }},
         {"", "MBH", true, [](const Jump& j) { return Cell{j.type, T_SUB}; }},
         {"итог", "OK", false, [](const Jump& j) {
              return Cell{j.result() == 1 ? "OK" : j.result() == 2 ? "NO" : "·",
@@ -588,11 +607,12 @@ static std::string build_csv(const std::deque<Jump>& jumps) {
     head.push_back("стрейфы");
     head.push_back("ранг");
     head.push_back("ручная_отметка");
+    head.push_back("attempt_id");
     for (size_t i = 0; i < head.size(); i++) out += (i ? ";" : "") + csv_field(head[i]);
     out += "\r\n";
     for (auto& j : jumps) {
         std::vector<std::string> row = {j.time, j.result() == 1 ? "удачный" : j.result() == 2 ? "неудачный" : "",
-                                        j.name, j.type, csv_num(j.dist)};
+                                        j.playerName(), j.type, csv_num(j.dist)};
         for (auto& k : keys) {
             auto it = j.stats.find(k);
             row.push_back(it == j.stats.end() ? "" : it->second.num ? csv_num(it->second.d) : it->second.s);
@@ -607,6 +627,7 @@ static std::string build_csv(const std::deque<Jump>& jumps) {
         row.push_back(st);
         row.push_back(j.rankName());
         row.push_back(j.mark == 1 ? "GOOD" : j.mark == 2 ? "BAD" : "AUTO");
+        row.push_back(std::to_string(j.attemptId));
         for (size_t i = 0; i < row.size(); i++) out += (i ? ";" : "") + csv_field(row[i]);
         out += "\r\n";
     }
@@ -771,54 +792,7 @@ static bool is_dir(const std::wstring& p) {
 }
 
 // ---------- чтение растущего лога ----------
-struct Tailer {
-    std::wstring path;
-    long long pos = -1;   // -1: при первом опросе начать с конца файла
-    std::string buf;
-    long long replayUntil = -1;
-    bool historical = true;
-
-    bool exists() const { return GetFileAttributesW(path.c_str()) != INVALID_FILE_ATTRIBUTES; }
-
-    std::vector<std::string> poll() {
-        std::vector<std::string> lines;
-        HANDLE h = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                               nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (h == INVALID_HANDLE_VALUE) {
-            if (pos < 0) pos = 0;   // файла ещё нет — когда появится, читаем с начала
-            return lines;
-        }
-        LARGE_INTEGER sz{};
-        GetFileSizeEx(h, &sz);
-        long long size = sz.QuadPart;
-        if (replayUntil < 0 || size < pos) replayUntil = size;
-        historical = pos < replayUntil;
-        if (pos < 0) pos = size;
-        if (size < pos) { pos = 0; buf.clear(); }   // CS перезапустили, лог обнулился
-        if (size > pos) {
-            long long n = std::min<long long>(size - pos, 8 << 20);
-            LARGE_INTEGER li{};
-            li.QuadPart = pos;
-            SetFilePointerEx(h, li, nullptr, FILE_BEGIN);
-            std::string data((size_t)n, '\0');
-            DWORD got = 0;
-            ReadFile(h, data.data(), (DWORD)n, &got, nullptr);
-            data.resize(got);
-            pos += got;
-            buf += data;
-            size_t a = 0, b;
-            while ((b = buf.find('\n', a)) != std::string::npos) {
-                std::string ln = buf.substr(a, b - a);
-                if (!ln.empty() && ln.back() == '\r') ln.pop_back();
-                lines.push_back(std::move(ln));
-                a = b + 1;
-            }
-            buf.erase(0, a);
-        }
-        CloseHandle(h);
-        return lines;
-    }
-};
+#include "console_tailer.h"
 
 // ---------- хоткеи ----------
 struct Hotkey {
@@ -915,7 +889,7 @@ static const wchar_t* DEFAULT_INI =
     L"gaineff=40,30\r\n";
 
 enum { T_LOG = 1, T_KEYS = 2, T_TOP = 3, T_UPD = 4 };
-enum MenuPage { MENU_MAIN, MENU_SOUND, MENU_TEST_SOUND, MENU_JUMPS, MENU_VIEW, MENU_SESSION, MENU_CONFIRM_CLEAR, MENU_CONFIRM_IMPORT };
+enum MenuPage { MENU_MAIN, MENU_SOUND, MENU_TEST_SOUND, MENU_JUMPS, MENU_VIEW, MENU_SESSION, MENU_CONFIRM_CLEAR, MENU_CONFIRM_IMPORT, MENU_LOG, MENU_GOALS };
 struct MenuHit { RECT r; int key; int direction = 1; };
 
 struct App {
@@ -923,26 +897,47 @@ struct App {
     HWND hwnd{};
     bool settingsOpen = false;
     HWND previousForeground{};
-    RECT settingsButton{};
+    RECT settingsButton{}, analysisButton{}, analysisCopy{}, analysisLatest{}, analysisBody{};
+    bool analysisOpen = false;
+    int analysisScroll = 0, analysisLineCount = 0;
+    unsigned long long selectedAttempt = 0, nextAttemptId = 1;
+    unsigned long long compareA = 0, compareB = 0;
+    int comparePick = 0, compareScroll = 0, compareLineCount = 0;
+    bool pairOpen = false;
+    unsigned long long pairCacheA = 0, pairCacheB = 0;
+    JumpDirection pairDirectionA = DIR_UNKNOWN, pairDirectionB = DIR_UNKNOWN;
+    std::vector<std::string> pairReport;
+    size_t historyPage = 0, historyEnd = 0;
+    RECT historyBody{}, latestButton{}, pairButton{}, pairBody{}, pairAButton{}, pairBButton{}, directionButton{};
+    std::vector<std::pair<RECT, unsigned long long>> historyHits;
+    std::vector<std::vector<std::string>> analyses;
+    std::string analysisCopyStatus;
     bool classicMenu = true;
     bool soundEnabled = false, awardPending = false;
     int soundMaster = 80, soundMenu = 60, soundAwards = 100;
+    int goalEdit = 0;
+    std::string goalDraft, goalError;
     MenuPage menuPage = MENU_MAIN;
     int menuHover = -1, menuSelected = 0;
     size_t menuHistoryEnd = 0; // Снимок конца истории: новые прыжки не сдвигают выбор.
     size_t menuHistoryPage = 0;
     std::vector<MenuHit> menuHits;
     std::vector<MenuHit> adjustHits;
-    std::wstring exeDir, iniPath, jumpsDir, sessionFile;
+    std::wstring exeDir, iniPath, jumpsDir, sessionFile, historyPath;
     std::deque<Jump> jumps;
     Parser parser{jumps};
     Tailer tail;
+    ConsoleImport importer;
+    bool autoLog = false, logEditing = false;
+    ULONGLONG nextLogSearch = 0;
+    std::wstring logDraft;
+    std::string logEditError, logState;
     bool locked = false, hidden = false;
     bool showStrafes = true, showKeys = true, showHist = true, showCmp = true, showDetails = true;
     int alpha = 250, histRows = 5, dpi = 96, winW = 0, winH = 0;
     double scale = 1.0;
     std::vector<std::pair<std::string, Hotkey>> hk;
-    std::string statusLog, statusCsv, statusCfg;
+    std::string statusLog, statusCsv, statusCfg, statusHistory;
     HFONT fBig{}, fType{}, fPill{}, fSub{}, fTile{}, fTile2{}, fCap{}, fSec{}, fTbl{}, fTblB{}, fTH{}, fLbl{},
         fFoot{}, fFootB{}, fHint{}, fMenuHead{}, fMenuRow{}, fMenuSmall{}, fMenuDigit{};
     HDC measureDC{};
@@ -969,38 +964,9 @@ static void ini_set(const wchar_t* sec, const wchar_t* key, const std::wstring& 
 }
 
 #include "sound_system.h"
+#include "jump_review_state.h"
 
-static std::wstring find_console_log() {
-    std::vector<std::wstring> libs;
-    wchar_t buf[1024];
-    DWORD sz = sizeof(buf);
-    if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Valve\\Steam", L"SteamPath", RRF_RT_REG_SZ, nullptr, buf,
-                     &sz) == ERROR_SUCCESS) {
-        std::wstring steam = buf;
-        libs.push_back(steam);
-        std::string vdf;
-        if (read_file(steam + L"\\steamapps\\libraryfolders.vdf", vdf)) {
-            static const std::regex pr("\"path\"\\s+\"([^\"]+)\"");
-            for (std::sregex_iterator it(vdf.begin(), vdf.end(), pr), end; it != end; ++it) {
-                std::string p = (*it)[1].str();
-                size_t k;
-                while ((k = p.find("\\\\")) != std::string::npos) p.erase(k, 1);
-                libs.push_back(W(p));
-            }
-        }
-    }
-    libs.push_back(L"C:\\Program Files (x86)\\Steam");
-    libs.push_back(L"C:\\Program Files\\Steam");
-    for (const wchar_t* d : {L"D:", L"E:", L"F:", L"G:"}) {
-        libs.push_back(std::wstring(d) + L"\\SteamLibrary");
-        libs.push_back(std::wstring(d) + L"\\Steam");
-    }
-    for (auto& l : libs) {
-        std::wstring d = l + L"\\steamapps\\common\\Counter-Strike Global Offensive\\game\\csgo";
-        if (is_dir(d)) return d + L"\\console.log";
-    }
-    return L"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\csgo\\console.log";
-}
+#include "console_source.h"
 
 // Шрифт с проверкой: если нужного нет в системе (Bahnschrift — Win10+), берём Segoe UI
 static HFONT mkfont(const wchar_t* face, double pt, int weight) {
@@ -1130,6 +1096,9 @@ struct Painter {
     }
 };
 
+#include "jump_review_draw.h"
+#include "console_draw.h"
+
 // ---------- таблицы ----------
 template <class T>
 static std::vector<int> col_widths(Painter& p, const std::vector<TCol<T>>& cols) {
@@ -1149,6 +1118,16 @@ static int table_width(Painter& p, const std::vector<TCol<T>>& cols) {
 }
 
 static int row_h(Painter& p) { return p.lh(g.fTbl) + g.S(2); }
+
+static std::string fit_text(Painter& p, HFONT font, std::string text, int width) {
+    if (p.width(font,text)<=width) return text;
+    while (!text.empty() && p.width(font,text+"…")>width) {
+        size_t pos=text.size()-1;
+        while(pos && ((unsigned char)text[pos]&0xc0)==0x80) --pos;
+        text.resize(pos);
+    }
+    return text+"…";
+}
 
 // rowBg(i) / bar(row): CLR_NONE = без фона / без полоски
 template <class T>
@@ -1175,6 +1154,7 @@ static int draw_table(Painter& p, int x, int y, int innerW, const std::vector<TC
         for (size_t i = 0; i < cols.size(); i++) {
             Cell c = cols[i].fn(*rows[r]);
             HFONT f = c.bold ? g.fTblB : g.fTbl;
+            if (cols[i].head == "ИГРОК") c.s=fit_text(p,f,c.s,w[i]-(i ? gap : 0));
             if (cols[i].left) p.text(cx + (i ? gap : 0), ty, f, tone_color(c.t), c.s);
             else p.textR(cx + w[i], ty, f, tone_color(c.t), c.s);
             cx += w[i];
@@ -1263,14 +1243,47 @@ static COLORREF graph_color(char c) {
     return clr::empty;
 }
 
+static void finalize_analysis(size_t index) {
+    if (g.analyses.size() < g.jumps.size()) g.analyses.resize(g.jumps.size());
+    if (index < g.jumps.size() && g.analyses[index].empty())
+        g.analyses[index] = analyze_jump(g.jumps[index]);
+}
+static void copy_analysis() {
+    g.analysisCopyStatus = "Отчёт ещё не готов";
+    if (!g.jumps.empty()) {
+        size_t index = analysis_index();
+        if (index < g.analyses.size() && !g.analyses[index].empty()) {
+            std::string text;
+            for (const auto& line : g.analyses[index]) text += line + "\r\n";
+            std::wstring wide = W(text);
+            HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, (wide.size() + 1) * sizeof(wchar_t));
+            if (mem) {
+                void* dst = GlobalLock(mem);
+                if (dst) {
+                    memcpy(dst, wide.c_str(), (wide.size() + 1) * sizeof(wchar_t));
+                    GlobalUnlock(mem);
+                    if (OpenClipboard(g.hwnd)) {
+                        if (EmptyClipboard() && SetClipboardData(CF_UNICODETEXT, mem)) mem = nullptr;
+                        CloseClipboard();
+                    }
+                }
+                g.analysisCopyStatus = mem ? "Не удалось скопировать" : "Скопировано";
+                if (mem) GlobalFree(mem);
+            } else g.analysisCopyStatus = "Не удалось скопировать";
+        }
+    }
+}
+
 static int draw_settings(Painter& p, int x, int y, int width);
 
 static int render(Painter& p, int Wd) {
     g.menuHits.clear();
+    g.historyHits.clear();
+    g.historyBody = g.pairAButton = g.pairBButton = g.pairBody = g.directionButton = RECT{};
     const int pad = g.S(g.classicMenu ? 4 : 5), cp = g.S(g.classicMenu ? 5 : 7), gapY = g.S(g.classicMenu ? 3 : 4);
     const int x0 = pad + cp, innerW = Wd - 2 * pad - 2 * cp;
     int y = pad;
-    const Jump* j = g.jumps.empty() ? nullptr : &g.jumps.back();
+    const Jump* j = viewed_jump();
     update_best(g.jumps);
 
     std::vector<const Jump*> same;
@@ -1307,6 +1320,9 @@ static int render(Painter& p, int Wd) {
         p.rrect(g.settingsButton.left, g.settingsButton.top, bw, bh, g.S(5), clr::pill);
         p.textR(x0 + innerW - g.S(7), yy, g.fFootB, clr::accent, label);
         yy += std::max(p.lh(g.fType), p.lh(g.fFootB)) + g.S(9);
+        p.text(x0, yy, g.fFootB, console_state() == "LOG ERROR" ? clr::warn : clr::accent, console_state());
+        p.textR(x0 + innerW, yy, g.fFoot, clr::sub, g.tail.readingHistory ? sfmt("%lld / %lld bytes", g.tail.pos, g.tail.replayUntil) : "console.log");
+        yy += p.lh(g.fFootB) + g.S(6);
         const int gap = g.S(6), tw = (innerW - gap * 2) / 3;
         const int th = std::max(g.S(55), p.lh(g.fBig) + p.lh(g.fCap) + g.S(12));
         struct Stat { const char* label; int n; COLORREF color; };
@@ -1328,7 +1344,7 @@ static int render(Painter& p, int Wd) {
 
     // ---- шапка + плитки ----
     COLORREF mfg = clr::sub, mbg = clr::noneBg;
-    std::string mt = j ? "НЕ ОТМЕЧЕН" : "ЖДУ ПРЫЖОК";
+    std::string mt = j ? "НЕ ОТМЕЧЕН" : console_state() == "LOG ERROR" ? "LOG ERROR" : g.tail.readingHistory ? "ЧИТАЮ ИСТОРИЮ" : "ЖДУ ПРЫЖОК";
     if (j && j->result() == 1) { mt = "УДАЧНЫЙ"; mfg = clr::good; mbg = clr::goodBg; }
     if (j && j->result() == 2) { mt = "НЕУДАЧНЫЙ"; mfg = clr::fail; mbg = clr::failBg; }
     if (j && j->mark) mt += " · РУЧНО";
@@ -1336,6 +1352,20 @@ static int render(Painter& p, int Wd) {
     COLORREF distC = j ? tone_color(rank_tone(*j)) : clr::dim;
 
     card(nullptr, bar, [&](int yy) {
+        const std::string latestLabel = "ПОСЛЕДНИЙ";
+        int latestW = p.width(g.fFootB, latestLabel) + g.S(14);
+        int topH = p.lh(g.fFootB) + g.S(5);
+        g.latestButton = RECT{x0 + innerW - latestW, yy, x0 + innerW, yy + topH};
+        p.textR(x0 + innerW - g.S(5), yy, g.fFootB, clr::accent, latestLabel);
+        std::string attemptTitle;
+        if (j) {
+            auto prefix=sfmt("Попытка #%llu · ",j->attemptId);
+            std::string suffix=g.selectedAttempt ? " · выбрана из истории" : " · последняя";
+            int nameWidth=innerW-latestW-g.S(5)-p.width(g.fFoot,prefix+suffix);
+            attemptTitle=prefix+fit_text(p,g.fFoot,j->playerName(),nameWidth)+suffix;
+        } else attemptTitle=console_state()=="LOG ERROR" ? "Источник недоступен" : g.tail.readingHistory ? "Читаю историю console.log" : "Жду прыжок";
+        p.text(x0,yy,g.fFoot,clr::sub,fit_text(p,g.fFoot,attemptTitle,innerW-latestW-g.S(5)));
+        yy += topH;
         int hBig = p.lh(g.fBig);
         std::string type = j ? j->type : "LJ";
         int tpw = p.width(g.fType, type) + g.S(18), tph = p.lh(g.fType) + g.S(6);
@@ -1355,8 +1385,6 @@ static int render(Painter& p, int Wd) {
             double blk = j->g("Block");
             if (ok(blk)) parts.push_back(sfmt("блок %.0f", blk));
             if (!j->gs("Mode").empty()) parts.push_back(j->gs("Mode"));
-            for (auto& x : g.jumps)
-                if (x.name != j->name) { parts.push_back(j->name); break; }
             std::string sub;
             for (auto& s : parts) sub += (sub.empty() ? "" : "  ·  ") + s;
             if (!sub.empty()) { p.textR(x0 + innerW, ry, g.fSub, clr::sub, sub); ry += p.lh(g.fSub); }
@@ -1364,6 +1392,10 @@ static int render(Painter& p, int Wd) {
         }
         yy += std::max(hBig, ry - yy) + g.S(5);
 
+        if (j) {
+            std::string nearRank = preference(*j) && preference(*j)->goalMode != GOAL_NEXT ? goal_progress(*j).text : next_rank_text(*j);
+            if (!nearRank.empty()) { p.text(x0, yy, g.fFootB, goal_progress(*j).reached ? clr::good : goal_progress(*j).isNear ? clr::warn : clr::sub, nearRank); yy += p.lh(g.fFootB) + g.S(3); }
+        }
         // Дополнительная компактная строка: JS | LJ: 231.3 | 2 Strafes (81.5%) | ...
         // Длинная строка переносится по секциям, чтобы не расширять окно.
         if (j) {
@@ -1397,6 +1429,94 @@ static int render(Painter& p, int Wd) {
         };
         yy = tiles(yy, tiles_row1(j), g.fTile) + g.S(4);
         return g.showDetails ? tiles(yy, tiles_row2(j), g.fTile2) : yy - g.S(4);
+    });
+
+    // One compact, collapsible report inside the existing HUD.
+    card(nullptr, CLR_NONE, [&](int yy) {
+        int lh = p.lh(g.fFoot) + g.S(3);
+        g.analysisButton = RECT{x0, yy, x0 + innerW, yy + lh};
+        p.text(x0, yy, g.fFootB, clr::accent, g.analysisOpen ? "− РАЗБОР ПРЫЖКА" : "+ РАЗБОР ПРЫЖКА");
+        yy += lh;
+        g.analysisCopy = g.analysisLatest = g.analysisBody = RECT{};
+        if (!g.analysisOpen) return yy;
+        if (g.jumps.empty()) { p.text(x0, yy, g.fFoot, clr::sub, console_state() == "LOG ERROR" ? "Сначала настройте источник console.log." : "Жду прыжок"); return yy + lh; }
+        size_t index = analysis_index();
+        p.text(x0, yy, g.fFoot, clr::sub, sfmt("Попытка #%llu · %s", index < g.jumps.size() ? g.jumps[index].attemptId : 0,
+               g.selectedAttempt == 0 ? "последняя" : "выбрана из истории"));
+        yy += lh;
+        if (index < g.jumps.size()) {
+            g.directionButton = RECT{x0, yy, x0 + innerW, yy + lh};
+            p.text(x0, yy, g.fFootB, clr::accent, std::string(direction_name(g.jumps[index].direction)) + " · сменить вручную");
+            yy += lh;
+        }
+        std::vector<std::string> reportLines;
+        auto wrapped = [&](const std::string& line) {
+            std::string row;
+            for (const auto& word : split_ws(line)) {
+                std::string next = row.empty() ? word : row + " " + word;
+                if (!row.empty() && p.width(g.fFoot, next) > innerW) {
+                    reportLines.push_back(row); row = word;
+                } else row = next;
+                // A nickname may contain no spaces. Wrap on UTF-8 codepoint
+                // boundaries instead of letting a single long word escape the HUD.
+                while (p.width(g.fFoot,row)>innerW && !row.empty()) {
+                    size_t end=0;
+                    for(size_t k=1;k<=row.size();++k) {
+                        if(k<row.size() && ((unsigned char)row[k]&0xc0)==0x80) continue;
+                        if(p.width(g.fFoot,row.substr(0,k))>innerW) break;
+                        end=k;
+                    }
+                    if(!end) { end=1;while(end<row.size() && ((unsigned char)row[end]&0xc0)==0x80)++end; }
+                    reportLines.push_back(row.substr(0,end));row.erase(0,end);
+                }
+            }
+            if(!row.empty()) reportLines.push_back(row);
+        };
+        if (index < g.analyses.size() && !g.analyses[index].empty())
+            for (const auto& line : g.analyses[index]) wrapped(line);
+        else wrapped("Получаю статистику… Разбор появится после закрытия блока парсера.");
+        g.analysisLineCount = (int)reportLines.size();
+        g.analysisScroll = std::clamp(g.analysisScroll, 0, std::max(0, g.analysisLineCount - 7));
+        int bodyTop = yy;
+        for (int n = g.analysisScroll; n < std::min(g.analysisLineCount, g.analysisScroll + 7); ++n) {
+            p.text(x0, yy, g.fFoot, clr::sub, reportLines[n]); yy += lh;
+        }
+        g.analysisBody = RECT{x0, bodyTop, x0 + innerW, yy};
+        if (g.analysisLineCount > 7) {
+            p.text(x0, yy, g.fFoot, clr::accent, sfmt("Строки %d–%d / %d · прокрутка колёсиком", g.analysisScroll + 1,
+                   std::min(g.analysisLineCount, g.analysisScroll + 7), g.analysisLineCount)); yy += lh;
+        }
+        int cw = p.width(g.fFootB, "КОПИРОВАТЬ") + g.S(12);
+        g.analysisCopy = RECT{x0, yy, x0 + cw, yy + lh};
+        p.text(x0, yy, g.fFootB, clr::accent, "КОПИРОВАТЬ");
+        g.analysisLatest = RECT{x0 + cw, yy, x0 + innerW, yy + lh};
+        p.text(x0 + cw, yy, g.fFootB, clr::accent, "ПОСЛЕДНИЙ");
+        yy += lh;
+        if (!g.analysisCopyStatus.empty()) { p.text(x0, yy, g.fFoot, clr::sub, g.analysisCopyStatus); yy += lh; }
+        return yy;
+    });
+
+    card(nullptr, CLR_NONE, [&](int yy) {
+        int lh = p.lh(g.fFootB) + g.S(4);
+        g.pairButton = RECT{x0, yy, x0 + innerW, yy + lh};
+        p.text(x0, yy, g.fFootB, clr::accent, g.pairOpen ? "− СРАВНИТЬ" : "+ СРАВНИТЬ");
+        yy += lh;
+        if (!g.pairOpen) return yy;
+        int half = innerW / 2;
+        g.pairAButton = RECT{x0, yy, x0 + half, yy + lh};
+        g.pairBButton = RECT{x0 + half, yy, x0 + innerW, yy + lh};
+        p.text(x0, yy, g.fFootB, clr::accent, g.compareA ? sfmt("A: #%llu · выбрать", g.compareA) : "A: выбрать попытку");
+        p.text(x0 + half, yy, g.fFootB, clr::accent, g.compareB ? sfmt("B: #%llu · выбрать", g.compareB) : "B: выбрать попытку");
+        yy += lh;
+        size_t ia = attempt_index(g.compareA), ib = attempt_index(g.compareB);
+        std::vector<std::string> lines;
+        if (g.comparePick) lines = {g.comparePick == 1 ? "Выберите попытку A в истории HUD или INS → История." : "Выберите попытку B в истории HUD или INS → История."};
+        else if (ia >= g.jumps.size() || ib >= g.jumps.size()) lines = {"Нажмите A или B, затем строку истории. Сравнение откроется здесь."};
+        else if (ia == ib) lines = {"Выбрана одна и та же попытка. Выберите другую для A или B."};
+        else if (ia >= g.analyses.size() || ib >= g.analyses.size() || g.analyses[ia].empty() || g.analyses[ib].empty())
+            lines = {"Жду закрытия блоков статистики обеих попыток; окончательного сравнения пока нет."};
+        else lines = comparison_report(ia, ib);
+        return draw_review_lines(p, x0, yy, innerW, lines, g.compareScroll, g.compareLineCount, g.pairBody);
     });
 
     // ---- стрейфы ----
@@ -1446,13 +1566,29 @@ static int render(Painter& p, int Wd) {
     // ---- история ----
     if (g.showHist)
         card("ИСТОРИЯ", CLR_NONE, [&](int yy) {
+            int startY = yy;
             std::vector<const Jump*> rows;
-            for (auto it = g.jumps.rbegin(); it != g.jumps.rend() && (int)rows.size() < g.histRows; ++it)
-                rows.push_back(&*it);
-            return draw_table<Jump>(
+            size_t end = g.historyPage ? std::min(g.historyEnd, g.jumps.size()) : g.jumps.size();
+            if (g.historyPage && end) g.historyPage = std::min(g.historyPage, (end - 1) / (size_t)std::max(1, g.histRows));
+            size_t skip = g.historyPage * (size_t)g.histRows;
+            for (size_t offset = skip; offset < end && (int)rows.size() < g.histRows; ++offset)
+                rows.push_back(&g.jumps[end - 1 - offset]);
+            p.text(x0, yy, g.fFoot, clr::sub, sfmt("Страница %zu · колесо / PgUp/PgDn%s", g.historyPage + 1,
+                   g.comparePick ? " · выберите попытку для сравнения" : ""));
+            yy += p.lh(g.fFoot) + g.S(3);
+            int rowTop = yy + p.lh(g.fTbl) + g.S(4);
+            int result = draw_table<Jump>(
                 p, x0, yy, innerW, hist_cols(), rows,
-                [](size_t i) { return i == 0 ? clr::hl : i % 2 ? clr::card2 : CLR_NONE; },
+                [&](size_t i) { return rows[i] == j ? clr::hl : i % 2 ? clr::card2 : CLR_NONE; },
                 [](const Jump& x) { return x.result() == 1 ? clr::good : x.result() == 2 ? clr::fail : CLR_NONE; });
+            // Card bodies have a measuring pass; record each row only once.
+            for (size_t i = 0; i < rows.size(); ++i) {
+                RECT hit{x0, rowTop + (int)i * row_h(p), x0 + innerW, rowTop + ((int)i + 1) * row_h(p)};
+                if (std::none_of(g.historyHits.begin(), g.historyHits.end(), [&](const auto& h) { return h.second == rows[i]->attemptId; }))
+                    g.historyHits.push_back({hit, rows[i]->attemptId});
+            }
+            g.historyBody = RECT{x0, startY, x0 + innerW, result};
+            return result;
         });
 
     // ---- сравнение (только когда есть отметки) ----
@@ -1483,7 +1619,7 @@ static int render(Painter& p, int Wd) {
             seg(g.fFoot, clr::fail, sfmt("неудачных %d", bad));
             seg(g.fFoot, clr::pb, sfmt("лучший %.2f", g_best[j->type]));
             seg(g.fFoot, clr::sub, sfmt("ср. %.2f", sum / same.size()));
-        } else seg(g.fFoot, clr::sub, "прыжков пока нет — прыгай");
+        } else seg(g.fFoot, clr::sub, console_state() == "LOG ERROR" ? "Нет данных из console.log" : g.tail.readingHistory ? "Читаю историю console.log" : "прыжков пока нет — прыгай");
         y += p.lh(g.fFoot) + g.S(3);
     }
     for (int n : {1, 2}) {
@@ -1491,9 +1627,12 @@ static int render(Painter& p, int Wd) {
         std::string h = hint_line(n);
         if (!h.empty()) { p.text(pad + g.S(5), y, g.fHint, clr::dim, h); y += p.lh(g.fHint); }
     }
-    for (auto* st : {&g.statusCfg, &g.statusLog, &g.statusCsv})
+    for (auto* st : {&g.statusCfg, &g.statusLog, &g.statusCsv, &g.statusHistory})
         if (!st->empty())
-            for (auto& l : split(*st, '\n')) { p.text(pad + g.S(6), y, g.fFoot, clr::warn, l); y += p.lh(g.fFoot); }
+            for (auto& l : split(*st, '\n')) {
+                if (st == &g.statusLog) y = draw_console_text(p, pad + g.S(6), y, Wd - 2 * pad - g.S(12), l, clr::warn);
+                else { p.text(pad + g.S(6), y, g.fFoot, clr::warn, l); y += p.lh(g.fFoot); }
+            }
 
     return y + pad;
 }
@@ -1512,11 +1651,20 @@ static void relayout() {
 }
 
 // ---------- действия ----------
+#include "jump_history_store.h"
+
+static void save_history() {
+    g.statusHistory=history_store::save() ? "" : "Не удалось сохранить историю попыток; проверьте доступ к папке EXE.";
+}
 static void save_csv() {
+    save_history();
     if (g.jumps.empty()) return;
     if (g.sessionFile.empty()) {
         CreateDirectoryW(g.jumpsDir.c_str(), nullptr);
-        g.sessionFile = g.jumpsDir + L"\\" + W(g.jumps.front().stamp) + L".csv";
+        std::wstring stem = g.jumpsDir + L"\\" + W(g.jumps.front().stamp);
+        g.sessionFile = stem + L".csv";
+        for (unsigned suffix = 2; GetFileAttributesW(g.sessionFile.c_str()) != INVALID_FILE_ATTRIBUTES; ++suffix)
+            g.sessionFile = stem + L"_" + std::to_wstring(suffix) + L".csv";
     }
     std::string data = build_csv(g.jumps);
     std::wstring tmp = g.sessionFile + L".tmp";
@@ -1528,11 +1676,17 @@ static void save_csv() {
 static void new_session() {
     g.awardPending = false;
     g.jumps.clear();
+    g.analyses.clear(); follow_latest();
+    g.compareA = g.compareB = 0; g.comparePick = 0; g.pairOpen = false;
+    g.pairReport.clear(); g.pairCacheA = g.pairCacheB = 0;
+    g.historyPage = g.historyEnd = 0;
     g.menuSelected = 0;
     g.menuHistoryEnd = 0;
     g.menuHistoryPage = 0;
     g.parser.reset();
+    g.importer.clear(g.parser);
     g.sessionFile.clear();
+    save_history();
     relayout();
 }
 
@@ -1566,6 +1720,7 @@ static bool load_menu_style() {
 static void set_success_rank(int rank) {
     if (rank < R_IMPRESSIVE || rank > R_WRECKER || rank == g_successRank) return;
     g_successRank = rank;
+    for (auto& mode:g_preferences) for(auto& p:mode) p.successRank=rank;
     ini_set(L"overlay", L"success_rank", W(lower(rank_name(rank))));
     // result() вычисляется при обращении: все счётчики и группы средних
     // обновятся при отрисовке. Перезаписываем только CSV текущей сессии.
@@ -1573,8 +1728,53 @@ static void set_success_rank(int rank) {
     relayout();
 }
 
+static std::wstring preference_section(int mode, int type) {
+    return W(std::string("jump_") + JUMP_MODES[mode] + "_" + RANK_THRESHOLDS[type].type);
+}
+static void save_preference(bool successChanged) {
+    auto section=preference_section(g_prefMode,g_prefType);
+    auto& p=g_preferences[g_prefMode][g_prefType];
+    ini_set(section.c_str(),L"success_mode",p.customSuccess ? L"distance" : L"rank");
+    ini_set(section.c_str(),L"success_rank",W(lower(rank_name(p.successRank))));
+    ini_set(section.c_str(),L"minimum",W(p.minimum));
+    ini_set(section.c_str(),L"goal_mode",std::to_wstring(p.goalMode));
+    ini_set(section.c_str(),L"target",W(p.target));
+    ini_set(section.c_str(),L"wr_manual",W(p.wr));
+    // Cached reports include the current target. Rebuild completed reports only.
+    for (size_t i=0;i<g.analyses.size() && i<g.jumps.size();++i)
+        if (!g.analyses[i].empty()) g.analyses[i]=analyze_jump(g.jumps[i]);
+    if (successChanged) save_csv();
+}
+static void load_preferences() {
+    for (int m=0;m<3;++m) for (int t=0;t<6;++t) {
+        auto section=preference_section(m,t); auto& p=g_preferences[m][t];
+        p=JumpPreference{};
+        p.successRank=parse_success_rank(U8(ini_get(section.c_str(),L"success_rank",W(lower(rank_name(g_successRank))).c_str())));
+        p.customSuccess=lower(U8(ini_get(section.c_str(),L"success_mode",L"rank")))=="distance";
+        p.goalMode=std::clamp(ini_int(section.c_str(),L"goal_mode",0),0,3);
+        auto number=[&](const wchar_t* key,const std::string& fallback) {
+            auto v=decimal_value(U8(ini_get(section.c_str(),key,W(fallback).c_str())));
+            return v.empty() || decimal_compare(v,"0.0")<=0 ? fallback : v;
+        };
+        p.minimum=number(L"minimum","249.9"); p.target=number(L"target","249.9"); p.wr=number(L"wr_manual","");
+    }
+}
+static bool apply_goal_edit() {
+    auto value=decimal_value(g.goalDraft);
+    if (value.empty() || decimal_compare(value,"0.0")<=0) {
+        g.goalError="Введите положительную десятичную дистанцию (например 249.9)."; return false;
+    }
+    auto& p=g_preferences[g_prefMode][g_prefType];
+    bool success=g.goalEdit==7;
+    if (success) p.minimum=value;
+    else if (g.goalEdit==8) p.target=value;
+    else if (g.goalEdit==9) p.wr=value;
+    save_preference(success); g.goalEdit=0; g.goalError.clear(); return true;
+}
+
 static void load_visual_preferences() {
     g_successRank = parse_success_rank(U8(ini_get(L"overlay", L"success_rank", L"perfect")));
+    load_preferences();
     g.alpha = std::clamp(ini_int(L"overlay", L"opacity", 250), 80, 255);
     g.histRows = std::clamp(ini_int(L"overlay", L"history_rows", 5), 1, 30);
     g.locked = ini_int(L"overlay", L"locked", 0) != 0;
@@ -1618,25 +1818,7 @@ static void command(const std::string& a) {
     else if (a == "quit") PostMessageW(g.hwnd, WM_CLOSE, 0, 0);
 }
 
-static void on_log_timer() {
-    bool changed = false;
-    for (auto& ln : g.tail.poll()) {
-        std::string cmd;
-        auto ev = g.parser.feed(ln, cmd);
-        if (ev == Parser::NEW) g.awardPending = !g.tail.historical;
-        if ((ev == Parser::NEW || ev == Parser::UPD) && g.awardPending && !g.jumps.empty() && g.jumps.back().rank() != R_UNKNOWN) {
-            sound_rank(g.jumps.back().rank()); g.awardPending = false;
-        }
-        if (ev == Parser::NEW || ev == Parser::UPD) changed = true;
-        else if (ev == Parser::CMD) { bool muted = soundReplay; soundReplay = g.tail.historical; command(cmd); soundReplay = muted; }
-    }
-    std::string st = g.tail.exists() ? "" : "Нет console.log — CS2 должна быть запущена с параметром -condebug\n" + U8(g.tail.path);
-    if (changed) save_csv();
-    if (changed || st != g.statusLog) {
-        g.statusLog = st;
-        relayout();
-    }
-}
+#include "console_pump.h"
 
 static constexpr UINT WM_LJ_KEY = WM_APP + 10, WM_LJ_MENU = WM_APP + 11;
 static HHOOK keyboardHook{};
@@ -1770,7 +1952,7 @@ static int draw_settings(Painter& p, int x, int y, int width) {
         g.menuHits.push_back({r, key});
         if (g.menuHover == key) p.rrect(x, y, width, h, g.S(4), clr::hl);
         std::string label = std::to_string(key) + ". " + title;
-        bool adjust = (g.menuPage == MENU_MAIN && (key == 2 || key == 3 || key == 11)) || (g.menuPage == MENU_SOUND && key >= 2 && key <= 4);
+        bool adjust = (g.menuPage == MENU_MAIN && (key == 2 || key == 3)) || (g.menuPage == MENU_SOUND && key >= 2 && key <= 4) || (g.menuPage == MENU_GOALS && key >= 1 && key <= 6);
         int reserved = value.empty() ? 0 : p.width(g.fFootB, value) + g.S(adjust ? 70 : 12);
         int saved = p.draw ? SaveDC(p.dc) : 0;
         if (p.draw) IntersectClipRect(p.dc, x, y, x + width - reserved, y + h);
@@ -1798,7 +1980,21 @@ static int draw_settings(Painter& p, int x, int y, int width) {
         row(9, "CSV / сессия / дополнительные настройки", "ДАЛЕЕ");
         row(0, "Закрыть настройки", "Esc / INS");
         row(10, "Звуки CS 1.6", "Enter / мышь");
-        row(11, "Успех от  (← / →)", rank_name(g_successRank));
+        row(11, "Успех / персональная цель", "НАСТРОИТЬ");
+    } else if (g.menuPage == MENU_GOALS) {
+        auto& policy = g_preferences[g_prefMode][g_prefType];
+        row(1, "Режим", JUMP_MODES[g_prefMode]);
+        row(2, "Тип", RANK_THRESHOLDS[g_prefType].type);
+        row(3, "Успешность", policy.customSuccess ? "Своя дистанция" : "По рангу");
+        row(4, "Удачный ранг", rank_name(policy.successRank));
+        row(5, "Минимум (шаг 0.1u)", policy.minimum + "u");
+        row(6, "Цель", GOAL_MODES[policy.goalMode]);
+        row(7, "Ввести минимум", g.goalEdit == 7 ? g.goalDraft + "|" : policy.minimum);
+        row(8, "Ввести свою цель", g.goalEdit == 8 ? g.goalDraft + "|" : policy.target);
+        row(9, "Ввести WR вручную", g.goalEdit == 9 ? g.goalDraft + "|" : policy.wr.empty() ? "не задан" : policy.wr);
+        y = draw_console_text(p,x,y,width,g.goalEdit ? "Дистанция: цифры, точка; Enter применить, Esc отмена." : "WR задаётся вручную и не является официальным рекордом.",clr::sub);
+        if (!g.goalError.empty()) y=draw_console_text(p,x,y,width,g.goalError,clr::warn);
+        row(0,"Назад");
     } else if (g.menuPage == MENU_SOUND) {
         row(1, "Звуки (только CS 1.6)", g.soundEnabled ? "ВКЛ" : "ВЫКЛ");
         row(2, "Общая громкость", sfmt("%d%%", g.soundMaster));
@@ -1819,18 +2015,32 @@ static int draw_settings(Painter& p, int x, int y, int width) {
             if (offset < end) {
                 size_t index = end - 1 - offset;
                 const Jump& j = g.jumps[index];
-                row(i + 1, sfmt("%s %.2f · %s", j.type.c_str(), j.dist, j.rankName()),
+                row(i + 1, sfmt("%s · %s %.2f · %s", fit_text(p,g.fFoot,j.playerName(),g.S(105)).c_str(), j.type.c_str(), j.dist, j.rankName()),
                     std::string(index == (size_t)g.menuSelected ? "> " : "") +
                     (j.result() == 1 ? "GOOD" : j.result() == 2 ? "BAD" : "—"));
             } else row(i + 1, "—");
         }
+        row(10, "Показать / разобрать выбранный прыжок");
+        row(11, "СРАВНИТЬ: выбранный = A, затем выберите B");
         row(7, "Выбранный: вернуть авто"); row(8, "Выбранный: GOOD"); row(9, "Выбранный: BAD"); row(0, "Назад");
     } else if (g.menuPage == MENU_SESSION) {
+        row(10, "Источник console.log", "НАСТРОИТЬ");
         row(1, "Сохранить CSV"); row(2, "Открыть папку CSV"); row(3, "Открыть INI");
         row(4, "Перечитать лог…"); row(5, "Новая сессия…");
         row(6, "Подробные плитки", g.showDetails ? "ВКЛ" : "ВЫКЛ");
         row(7, "Количество строк истории", std::to_string(g.histRows));
         row(8, "Закрепить HUD", g.locked ? "ВКЛ" : "ВЫКЛ"); row(9, "Вернуть HUD вправо"); row(0, "Назад");
+    } else if (g.menuPage == MENU_LOG) {
+        p.text(x, y, g.fFootB, clr::accent, console_state()); y += p.lh(g.fFootB) + g.S(4);
+        y = draw_console_text(p, x, y, width, "Источник: " + (g.tail.path.empty() ? std::string("не найден") : U8(g.tail.path)), clr::sub);
+        if (g.logEditing) {
+            y = draw_console_text(p, x, y, width, "Путь: " + U8(g.logDraft) + "|", clr::text);
+            y = draw_console_text(p, x, y, width, "Введите путь. Ctrl+V — вставить, Ctrl+A — очистить, Enter — применить, Esc — отмена.", clr::sub);
+        }
+        row(1, "Вставить путь из буфера и применить"); row(2, "Ввести / изменить путь внутри HUD"); row(3, "Автопоиск Steam / запущенной CS2");
+        y = draw_console_text(p, x, y, width, "Steam → CS2 → Свойства → Параметры запуска: -condebug. Нужен файл game\\csgo\\console.log. Перезапустите CS2 после изменения параметра.", clr::sub);
+        if (!g.logEditError.empty()) y = draw_console_text(p, x, y, width, g.logEditError, clr::warn);
+        row(0, "Назад");
     } else {
         p.text(x, y, g.fFootB, clr::warn, g.menuPage == MENU_CONFIRM_CLEAR ?
                "Начать новую сессию? Текущие прыжки будут удалены." : "Заменить сессию содержимым console.log?");
@@ -1843,7 +2053,7 @@ static int draw_settings(Painter& p, int x, int y, int width) {
 static void update_hud_input() {
     if (!g.hwnd) return;
     POINT pt{}; GetCursorPos(&pt); ScreenToClient(g.hwnd, &pt);
-    bool overButton = PtInRect(&g.settingsButton, pt) != 0;
+    bool overButton = PtInRect(&g.settingsButton, pt) || review_hit(pt);
     LONG_PTR before = GetWindowLongPtrW(g.hwnd, GWL_EXSTYLE), after = before;
     if (g.settingsOpen) after &= ~(LONG_PTR)(WS_EX_NOACTIVATE | WS_EX_TRANSPARENT);
     else {
@@ -1857,6 +2067,7 @@ static void update_hud_input() {
 static void menu_toggle() {
     if (!g.settingsOpen) g.previousForeground = GetForegroundWindow();
     g.settingsOpen = !g.settingsOpen;
+    g.logEditing = false; g.goalEdit = 0;
     sound_play(g.settingsOpen ? "wpn_hudon" : "wpn_hudoff", true);
     g.menuPage = MENU_MAIN; g.menuHover = 1;
     if (g.settingsOpen && g.hidden) { g.hidden = false; ShowWindow(g.hwnd, SW_SHOWNORMAL); }
@@ -1885,17 +2096,13 @@ static void menu_select(int key, int direction = 1) {
     }
     if (g.menuPage != MENU_TEST_SOUND && !(key == 0 && g.menuPage == MENU_MAIN)) sound_play("wpn_select", true);
     if (!key) {
+        g.logEditing = false; g.goalEdit = 0;
         if (g.menuPage == MENU_MAIN) { menu_toggle(); return; }
         g.menuPage = (g.menuPage == MENU_CONFIRM_CLEAR || g.menuPage == MENU_CONFIRM_IMPORT) ? MENU_SESSION : MENU_MAIN;
         g.menuHover = 1; relayout(); return;
     }
     if (g.menuPage == MENU_MAIN) {
-        if (key == 11) {
-            int next = g_successRank + (direction < 0 ? -1 : 1);
-            if (next > R_WRECKER) next = R_IMPRESSIVE;
-            if (next < R_IMPRESSIVE) next = R_WRECKER;
-            set_success_rank(next);
-        } else if (key == 10) g.menuPage = MENU_SOUND;
+        if (key == 11) { g.menuPage = MENU_GOALS; } else if (key == 10) g.menuPage = MENU_SOUND;
         else if (key == 1) set_menu_style(!g.classicMenu);
         else if (key == 2) change_scale(direction);
         else if (key == 3) {
@@ -1908,9 +2115,30 @@ static void menu_select(int key, int direction = 1) {
         else if (key == 7) g.showCmp = !g.showCmp;
         else if (key == 8) {
             g.menuPage = MENU_JUMPS; g.menuHistoryEnd = g.jumps.size(); g.menuHistoryPage = 0;
-            g.menuSelected = g.jumps.empty() ? -1 : (int)g.jumps.size() - 1;
+            g.menuSelected = g.jumps.empty() ? -1 : (int)analysis_index();
         } else if (key == 9) g.menuPage = MENU_SESSION;
         save_show();
+    } else if (g.menuPage == MENU_GOALS) {
+        g.goalEdit=0; g.goalError.clear();
+        auto& p=g_preferences[g_prefMode][g_prefType];
+        int step=direction < 0 ? -1 : 1;
+        if (key==1) g_prefMode=(g_prefMode+step+3)%3;
+        else if (key==2) g_prefType=(g_prefType+step+6)%6;
+        else if (key==3) { p.customSuccess=!p.customSuccess; save_preference(true); }
+        else if (key==4) { p.successRank=1+(p.successRank-1+step+5)%5; save_preference(true); }
+        else if (key==5) {
+            // Decimal addition/subtraction by exactly one tenth, independent of float.
+            if (step<0) { if (decimal_compare(p.minimum,"0.1")>0) p.minimum=decimal_subtract(p.minimum,"0.1"); }
+            else {
+                std::string a=p.minimum,b="0.1"; decimal_align(a,b); int carry=0;
+                for (size_t i=a.size();i-- >0;) if(a[i]!='.') { int n=a[i]+b[i]-2*'0'+carry; a[i]=char('0'+n%10); carry=n/10; }
+                if(carry) a="1"+a; p.minimum=decimal_value(a);
+            }
+            save_preference(true);
+        } else if (key==6) { p.goalMode=(p.goalMode+step+4)%4; save_preference(false); }
+        else if (key>=7 && key<=9) {
+            g.goalEdit=key; g.goalDraft=key==7 ? p.minimum : key==8 ? p.target : p.wr;
+        }
     } else if (g.menuPage == MENU_SOUND) {
         if (key == 1) g.soundEnabled = !g.soundEnabled;
         else if (key >= 2 && key <= 4) {
@@ -1924,7 +2152,13 @@ static void menu_select(int key, int direction = 1) {
     } else if (g.menuPage == MENU_JUMPS) {
         size_t end = std::min(g.menuHistoryEnd, g.jumps.size());
         size_t offset = g.menuHistoryPage * 6 + (size_t)key - 1;
-        if (key <= 6) { if (offset < end) g.menuSelected = (int)(end - 1 - offset); }
+        if ((key == 10 || key == 11) && g.menuSelected >= 0 && (size_t)g.menuSelected < g.jumps.size()) {
+            select_attempt((size_t)g.menuSelected);
+            if (key == 10) { g.analysisOpen = true; g.pairOpen = false; g.comparePick = 0; }
+            else { g.pairOpen = true; g.analysisOpen = false; g.compareA = g.selectedAttempt; g.compareB = 0; g.comparePick = 2; }
+            menu_toggle(); return;
+        }
+        if (key <= 6) { if (offset < end) { select_attempt(end - 1 - offset); } }
         else if (g.menuSelected >= 0 && (size_t)g.menuSelected < g.jumps.size()) {
             g.jumps[(size_t)g.menuSelected].mark = key == 8 ? 1 : key == 9 ? 2 : 0;
             save_csv();
@@ -1942,10 +2176,15 @@ static void menu_select(int key, int direction = 1) {
             SetWindowPos(g.hwnd,nullptr,std::max(0,GetSystemMetrics(SM_CXSCREEN)-g.winW-g.S(24)),g.S(40),0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
             ini_set(L"overlay",L"x",L"right");
         }
+        else if (key == 10) g.menuPage = MENU_LOG;
+    } else if (g.menuPage == MENU_LOG) {
+        if (key == 1) set_console_source(clipboard_log_path(), false);
+        else if (key == 2) { g.logDraft = g.tail.path; g.logEditing = true; g.logEditError.clear(); }
+        else if (key == 3) set_console_source(L"", true);
     } else if (key == 1) {
         bool import = g.menuPage == MENU_CONFIRM_IMPORT;
         save_csv(); new_session();
-        if (import) { g.tail.pos = 0; g.tail.buf.clear(); g.tail.replayUntil = -1; }
+        if (import) g.tail.select(g.tail.path);
         g.menuPage = MENU_MAIN;
     }
     update_hud_input(); relayout();
@@ -1961,6 +2200,22 @@ static void menu_history_scroll(bool older) {
 
 static void show_menu(int, int) { menu_toggle(); }
 
+static void review_scroll(bool older, POINT pt) {
+    if (!hud_interactive()) return;
+    if (g.analysisOpen && PtInRect(&g.analysisBody, pt))
+        g.analysisScroll = std::clamp(g.analysisScroll + (older ? 3 : -3), 0, std::max(0, g.analysisLineCount - 7));
+    else if (g.pairOpen && PtInRect(&g.pairBody, pt))
+        g.compareScroll = std::clamp(g.compareScroll + (older ? 3 : -3), 0, std::max(0, g.compareLineCount - 6));
+    else if (g.settingsOpen && g.menuPage == MENU_JUMPS) { menu_history_scroll(older); return; }
+    else if (g.showHist) {
+        if (!g.historyPage) g.historyEnd = g.jumps.size();
+        size_t end = std::min(g.historyEnd, g.jumps.size());
+        if (older && (g.historyPage + 1) * (size_t)g.histRows < end) ++g.historyPage;
+        else if (!older && g.historyPage) --g.historyPage;
+    }
+    relayout();
+}
+
 static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_LJ_KEY:
@@ -1969,7 +2224,7 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_LJ_MENU: menu_toggle(); return 0;
         case WM_NCHITTEST: {
             POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)}; ScreenToClient(h, &pt);
-            if (PtInRect(&g.settingsButton,pt)) return HTCLIENT;
+            if (PtInRect(&g.settingsButton,pt) || review_hit(pt)) return HTCLIENT;
             if (g.settingsOpen) {
                 // Настройки редактируются в HUD: верхняя строка служит ручкой перетаскивания.
                 // При открытых настройках она работает и с включённым закреплением F9.
@@ -1978,8 +2233,30 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
             }
             return g.locked ? HTTRANSPARENT : HTCAPTION;
         }
-        case WM_MOUSEACTIVATE: return g.settingsOpen ? MA_ACTIVATE : MA_NOACTIVATE;
+        case WM_MOUSEACTIVATE: return hud_interactive() ? MA_ACTIVATE : MA_NOACTIVATE;
         case WM_KEYDOWN: {
+            if (g.goalEdit && g.settingsOpen && g.menuPage==MENU_GOALS) {
+                if (wp==VK_ESCAPE) { g.goalEdit=0; g.goalError.clear(); }
+                else if (wp==VK_RETURN) apply_goal_edit();
+                else if ((GetKeyState(VK_CONTROL)&0x8000) && wp=='A') g.goalDraft.clear();
+                else if ((GetKeyState(VK_CONTROL)&0x8000) && wp=='V') {
+                    if(OpenClipboard(h)) { auto data=GetClipboardData(CF_UNICODETEXT);
+                        if(data) { auto str=(const wchar_t*)GlobalLock(data); if(str) { g.goalDraft=U8(str); GlobalUnlock(data); } }
+                        CloseClipboard(); }
+                }
+                relayout(); return 0;
+            }
+            if (g.logEditing && g.settingsOpen && g.menuPage == MENU_LOG) {
+                if (wp == VK_ESCAPE) { g.logEditing = false; g.logEditError.clear(); }
+                else if (wp == VK_RETURN) set_console_source(g.logDraft, false);
+                else if ((GetKeyState(VK_CONTROL) & 0x8000) && wp == 'V') g.logDraft = clipboard_log_path();
+                else if ((GetKeyState(VK_CONTROL) & 0x8000) && wp == 'A') g.logDraft.clear();
+                relayout(); return 0;
+            }
+            if ((wp == VK_NEXT || wp == VK_PRIOR) && hud_interactive()) {
+                POINT pt{}; GetCursorPos(&pt); ScreenToClient(h, &pt);
+                review_scroll(wp == VK_NEXT, pt); return 0;
+            }
             if (!g.settingsOpen) break;
             if (wp == VK_UP || wp == VK_DOWN) {
                 int n = (int)g.menuHits.size(), index = -1;
@@ -1989,13 +2266,26 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
                 InvalidateRect(h,nullptr,FALSE); return 0;
             }
             if (wp == VK_RETURN) { menu_select(g.menuHover); return 0; }
-            if (wp == VK_LEFT || wp == VK_RIGHT) { if((g.menuPage==MENU_MAIN && (g.menuHover==2 || g.menuHover==3 || g.menuHover==11)) || (g.menuPage==MENU_SOUND && g.menuHover>=2 && g.menuHover<=4)) menu_select(g.menuHover,wp==VK_RIGHT?1:-1); return 0; }
+            if (wp == VK_LEFT || wp == VK_RIGHT) { if(g.menuPage==MENU_GOALS || (g.menuPage==MENU_MAIN && (g.menuHover==2 || g.menuHover==3 || g.menuHover==11)) || (g.menuPage==MENU_SOUND && g.menuHover>=2 && g.menuHover<=4)) menu_select(g.menuHover,wp==VK_RIGHT?1:-1); return 0; }
             if (wp == VK_ESCAPE || wp == VK_BACK) { menu_select(0); return 0; }
             if (wp == VK_NEXT || wp == VK_PRIOR) { menu_history_scroll(wp==VK_NEXT); return 0; }
             if (wp>='0' && wp<='9') { menu_select((int)wp-'0'); return 0; }
             if (wp>=VK_NUMPAD0 && wp<=VK_NUMPAD9) { menu_select((int)wp-VK_NUMPAD0); return 0; }
             break;
         }
+        case WM_CHAR:
+            if (g.goalEdit && g.settingsOpen && g.menuPage==MENU_GOALS) {
+                if(wp==VK_BACK && !g.goalDraft.empty()) g.goalDraft.pop_back();
+                else if(((wp>='0' && wp<='9') || wp=='.' || wp==',') && g.goalDraft.size()<128)
+                    g.goalDraft += wp==',' ? '.' : (char)wp;
+                relayout(); return 0;
+            }
+            if (g.logEditing && g.settingsOpen && g.menuPage == MENU_LOG) {
+                if (wp == VK_BACK && !g.logDraft.empty()) g.logDraft.pop_back();
+                else if (wp >= 32 && wp != 127 && g.logDraft.size() < 2047) g.logDraft += (wchar_t)wp;
+                relayout(); return 0;
+            }
+            break;
         case WM_MOUSEMOVE: {
             if (!g.settingsOpen) break;
             POINT pt{GET_X_LPARAM(lp),GET_Y_LPARAM(lp)};
@@ -2005,13 +2295,37 @@ static LRESULT CALLBACK WndProc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_LBUTTONUP: {
             POINT pt{GET_X_LPARAM(lp),GET_Y_LPARAM(lp)};
             if (PtInRect(&g.settingsButton,pt)) {menu_toggle();return 0;}
+            if (!hud_interactive()) return 0;
+            if (PtInRect(&g.latestButton,pt) || PtInRect(&g.analysisLatest,pt)) { follow_latest(); relayout(); return 0; }
+            if (PtInRect(&g.pairButton,pt)) { g.pairOpen = !g.pairOpen; if (g.pairOpen) g.analysisOpen = false; g.comparePick = 0; relayout(); return 0; }
+            if (PtInRect(&g.pairAButton,pt) || PtInRect(&g.pairBButton,pt)) {
+                g.comparePick = PtInRect(&g.pairAButton,pt) ? 1 : 2; g.compareScroll = 0; relayout(); return 0;
+            }
+            if (PtInRect(&g.directionButton,pt)) {
+                size_t i = analysis_index();
+                if (i < g.jumps.size()) {
+                    g.jumps[i].direction = (JumpDirection)(((int)g.jumps[i].direction + 1) % 4);
+                    if (i < g.analyses.size() && !g.analyses[i].empty()) g.analyses[i] = analyze_jump(g.jumps[i]);
+                    g.analysisScroll = 0; g.analysisCopyStatus.clear();
+                }
+                relayout(); return 0;
+            }
+            for (const auto& item : g.historyHits) if (PtInRect(&item.first, pt)) {
+                auto id = item.second; select_attempt(attempt_index(id)); relayout(); return 0;
+            }
+            if (PtInRect(&g.analysisButton,pt)) { g.analysisOpen = !g.analysisOpen; if (g.analysisOpen) { g.pairOpen = false; g.comparePick = 0; } relayout(); return 0; }
+            if (PtInRect(&g.analysisCopy,pt)) { copy_analysis(); relayout(); return 0; }
             if (g.settingsOpen) for (const auto& item:g.adjustHits) if(PtInRect(&item.r,pt)) {
                 int key=item.key, dir=item.direction; menu_select(key,dir); return 0;
             }
             if(g.settingsOpen) for(const auto& item:g.menuHits) if(PtInRect(&item.r,pt)) {int key=item.key;menu_select(key);break;}
             return 0;
         }
-        case WM_MOUSEWHEEL: menu_history_scroll(GET_WHEEL_DELTA_WPARAM(wp)<0); return 0;
+        case WM_MOUSEWHEEL: {
+            POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)}; ScreenToClient(h, &pt);
+            review_scroll(GET_WHEEL_DELTA_WPARAM(wp) < 0, pt);
+            return 0;
+        }
         case WM_PRINTCLIENT: {
             HDC dc=reinterpret_cast<HDC>(wp);int saved=SaveDC(dc);
             RECT r{};GetClientRect(h,&r);HBRUSH bg=CreateSolidBrush(clr::bg);FillRect(dc,&r,bg);DeleteObject(bg);
@@ -2155,7 +2469,8 @@ int WINAPI wWinMain(HINSTANCE hi, HINSTANCE, PWSTR, int) {
     }
 
     std::wstring log = ini_get(L"overlay", L"log", L"");
-    g.tail.path = log.empty() ? find_console_log() : log;
+    g.autoLog = log.empty();
+    g.tail.select(g.autoLog ? find_console_log() : console_path(log));
     if (wcsstr(GetCommandLineW(), L"--all")) g.tail.pos = 0;
     g.parser.player = U8(ini_get(L"overlay", L"player", L""));
 
@@ -2187,6 +2502,8 @@ int WINAPI wWinMain(HINSTANCE hi, HINSTANCE, PWSTR, int) {
     g.dpi = GetDeviceCaps(sdc, LOGPIXELSY);
     ReleaseDC(nullptr, sdc);
     load_visual_preferences();
+    g.historyPath = g.exeDir + L"\\lj_history.dat";
+    if (!history_store::load()) g.statusHistory="История попыток не прочитана: файл повреждён или недоступен. Импортирую console.log.";
     sound_load_assets();
 
     g.measureDC = CreateCompatibleDC(nullptr);

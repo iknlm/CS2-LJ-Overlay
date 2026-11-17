@@ -1,0 +1,46 @@
+name: Build and test Windows x64
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - '**.ps1'
+      - '**.bat'
+      - 'sounds/**'
+      - '.github/workflows/windows-build.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Build the actual Windows GUI executable
+        shell: cmd
+        run: BUILD_EXE.bat < nul
+      - name: Run current regression tests
+        shell: pwsh
+        run: ./RUN_TESTS.ps1
+      - name: Upload build artifact (no release publication)
+        uses: actions/upload-artifact@v4
+        with:
+          name: CS2-LJ-Overlay-v1.2-local-win64
+          path: |
+            LJOverlay_new.exe
+            sounds/
+            licenses/
+            LICENSE
+            AUTHORS.md
+            THIRD_PARTY_NOTICES.md
+            SOUND_CREDITS.txt
+            README_EN.md
+            README_RU.md
+            BUILD_LOG.txt
+            reports/TEST_RESULTS.txt
+          if-no-files-found: error

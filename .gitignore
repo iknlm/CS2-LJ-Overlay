@@ -1,36 +1,44 @@
-# User and CS2 session data
-lj_overlay.ini
-lj_jumps/
-console.log
-
-# Build outputs / local archives
+# Local settings, histories and personal data
+/lj_overlay.ini
+/lj_history.dat
+/lj_history.dat.tmp
+/lj_jumps/
+*.csv
+*.ini
+*.log
+!sample_jump_console.log
+# Build and test products
+/build/
 *.exe
-*.exe.disabled
+*.dll
 *.o
 *.obj
-*.zip
-*.7z
-*.bmp
-/build/
-/release/
-/backups/
-/CommunityEdition/
-
-# Generated test artifacts and logs
-*_LOG.txt
-*_TEST.txt
-verification_test.ini
-verification_test.csv
-sound_test*.ini
-sound_test*.csv
-sound_test*.log
-hud_*.png
-runtime_*.png
-menu_*.png
-community_*.png
+*.a
+*.pdb
+*.ilk
 *.tmp
 *.bak
-
-# IDE
+*.disabled
+*.bmp
+/console_test_data/
+/console_gui_data/
+/players_test_data/
+/review_test_sessions/
+/players_exe_smoke_*/
+/v12*_smoke/
+/sound_test_*/
+# Old packages and local archives
+/backups/
+/release/
+/CommunityEdition/
+*.zip
+*.7z
+# Tools
 .vs/
 .vscode/
+__pycache__/
+*.pyc
+# Verification reports and screenshots are intentionally tracked.
+
+/dist/
+/artifacts/

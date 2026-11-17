@@ -1,0 +1,146 @@
+[
+  {
+    "file": "analysis_test.cpp",
+    "source_sha256": "edcba561c28b769df63fcd73a89c4bf6e239516f814724d4657ac41f34232621",
+    "copy_sha256": "edcba561c28b769df63fcd73a89c4bf6e239516f814724d4657ac41f34232621",
+    "identical": true
+  },
+  {
+    "file": "analysis_ui_test.cpp",
+    "source_sha256": "0adce9ecfbd9ce968f84c9a06891e052501cac64f33fe29b1f0f80c2c2c0e8b8",
+    "copy_sha256": "2f5d2f528c0e8f33031cb6e3ba07367d5180ca1884b583fe240692961e8467f4",
+    "identical": false
+  },
+  {
+    "file": "console_draw.h",
+    "source_sha256": "d863f6bfff5616489a6a0151d24781471ec67e28ce597106701ffc3290ccb7f1",
+    "copy_sha256": "d863f6bfff5616489a6a0151d24781471ec67e28ce597106701ffc3290ccb7f1",
+    "identical": true
+  },
+  {
+    "file": "console_gui_test.cpp",
+    "source_sha256": "34c88aa7caedc7c668834cdd5d5c854a6a26e12206aac39af0cea00de522988a",
+    "copy_sha256": "34c88aa7caedc7c668834cdd5d5c854a6a26e12206aac39af0cea00de522988a",
+    "identical": true
+  },
+  {
+    "file": "console_import.h",
+    "source_sha256": "bfb8f3e3bdf0796767572b1b5c57155434647889a0e8abd1d22bad79660eac0e",
+    "copy_sha256": "bfb8f3e3bdf0796767572b1b5c57155434647889a0e8abd1d22bad79660eac0e",
+    "identical": true
+  },
+  {
+    "file": "console_log_test.cpp",
+    "source_sha256": "4c1201d903ebd6210ec4b396894938edc886d1cd66b779001f7079805098afa6",
+    "copy_sha256": "4c1201d903ebd6210ec4b396894938edc886d1cd66b779001f7079805098afa6",
+    "identical": true
+  },
+  {
+    "file": "console_pump.h",
+    "source_sha256": "30d109dc3d146ecf11d6ba53e342b3a2ffbc1d3373e7df946ec4dc08d2e6cd06",
+    "copy_sha256": "30d109dc3d146ecf11d6ba53e342b3a2ffbc1d3373e7df946ec4dc08d2e6cd06",
+    "identical": true
+  },
+  {
+    "file": "console_source.h",
+    "source_sha256": "4b4d33cdf555e4d8cf313ff5e038419d8c7c5d52afa7f8c8c2239636fb99c92a",
+    "copy_sha256": "4b4d33cdf555e4d8cf313ff5e038419d8c7c5d52afa7f8c8c2239636fb99c92a",
+    "identical": true
+  },
+  {
+    "file": "console_tailer.h",
+    "source_sha256": "fa73047327ecbff7950c80343ec7b673521fac485691d7d26a87432f46104b28",
+    "copy_sha256": "fa73047327ecbff7950c80343ec7b673521fac485691d7d26a87432f46104b28",
+    "identical": true
+  },
+  {
+    "file": "goals_test.cpp",
+    "source_sha256": "b04c651b5ddeb5a6b49f2772f8f13f5ad220d75022b49e13fa0684c7d68fd1ba",
+    "copy_sha256": "b04c651b5ddeb5a6b49f2772f8f13f5ad220d75022b49e13fa0684c7d68fd1ba",
+    "identical": true
+  },
+  {
+    "file": "jump_analysis.h",
+    "source_sha256": "e3fc555282c573eb602dfdbc299ed67d76b6e8fbdbe9bb186537020516b53d1d",
+    "copy_sha256": "e3fc555282c573eb602dfdbc299ed67d76b6e8fbdbe9bb186537020516b53d1d",
+    "identical": true
+  },
+  {
+    "file": "jump_compare.h",
+    "source_sha256": "7d32acba656e8d57ddef283442530994b3c1884144ee91ace195a3835a04002b",
+    "copy_sha256": "7d32acba656e8d57ddef283442530994b3c1884144ee91ace195a3835a04002b",
+    "identical": true
+  },
+  {
+    "file": "jump_goals.h",
+    "source_sha256": "8bd833f4919b2672077eaf277f5562359682d2a7588f567db2bad0b5e173b445",
+    "copy_sha256": "8bd833f4919b2672077eaf277f5562359682d2a7588f567db2bad0b5e173b445",
+    "identical": true
+  },
+  {
+    "file": "jump_history_store.h",
+    "source_sha256": "8e4e90c94e80a5c9b2dd23d0ad00d04049c309a796e58ff1c5bd24ad822c08ab",
+    "copy_sha256": "8e4e90c94e80a5c9b2dd23d0ad00d04049c309a796e58ff1c5bd24ad822c08ab",
+    "identical": true
+  },
+  {
+    "file": "jump_review_draw.h",
+    "source_sha256": "f9c4f119ee6b7477ce701995e6216e413ebd557355fdc9919fafac3a8acd1554",
+    "copy_sha256": "f9c4f119ee6b7477ce701995e6216e413ebd557355fdc9919fafac3a8acd1554",
+    "identical": true
+  },
+  {
+    "file": "jump_review_state.h",
+    "source_sha256": "e4840342d05518e0dd14f6953e9ca9d772f2ccb04043f7105462cd8da3d47c91",
+    "copy_sha256": "e4840342d05518e0dd14f6953e9ca9d772f2ccb04043f7105462cd8da3d47c91",
+    "identical": true
+  },
+  {
+    "file": "lj_overlay.cpp",
+    "source_sha256": "c6056c307904c94aff7319378e0a47769bf548f4a428b76b1de38840d59fa12a",
+    "copy_sha256": "c6056c307904c94aff7319378e0a47769bf548f4a428b76b1de38840d59fa12a",
+    "identical": true
+  },
+  {
+    "file": "players_test.cpp",
+    "source_sha256": "478b8d34119e049958e145f17d3b6a927083c84b69c0ec5d0d535928b6d662a9",
+    "copy_sha256": "478b8d34119e049958e145f17d3b6a927083c84b69c0ec5d0d535928b6d662a9",
+    "identical": true
+  },
+  {
+    "file": "review_gui_test.cpp",
+    "source_sha256": "1114a1b41eeb2e35c5da7ef0b1a8a9553a207a33f06ff8392a6b0f740650ec2b",
+    "copy_sha256": "1114a1b41eeb2e35c5da7ef0b1a8a9553a207a33f06ff8392a6b0f740650ec2b",
+    "identical": true
+  },
+  {
+    "file": "review_model_test.cpp",
+    "source_sha256": "95ecfaeeefde955f1a30a3a04bd2342eed373b700cc4cd011991c0ff1487db66",
+    "copy_sha256": "95ecfaeeefde955f1a30a3a04bd2342eed373b700cc4cd011991c0ff1487db66",
+    "identical": true
+  },
+  {
+    "file": "sound_settings_test.cpp",
+    "source_sha256": "05caef4386b3f044b9ef1e95258b53448dce666d7d3b7c0dd0b0e94661583070",
+    "copy_sha256": "05caef4386b3f044b9ef1e95258b53448dce666d7d3b7c0dd0b0e94661583070",
+    "identical": true
+  },
+  {
+    "file": "sound_system.h",
+    "source_sha256": "cc96d864593acedf3399e5c5e1cd299b62d02856a58f8a03d0d9219d4f29c226",
+    "copy_sha256": "cc96d864593acedf3399e5c5e1cd299b62d02856a58f8a03d0d9219d4f29c226",
+    "identical": true
+  },
+  {
+    "file": "sound_test.cpp",
+    "source_sha256": "f78d0dbd352879d9d334f362612912fc598ea0c7d08e2ff53217ba54ebe59082",
+    "copy_sha256": "f78d0dbd352879d9d334f362612912fc598ea0c7d08e2ff53217ba54ebe59082",
+    "identical": true
+  },
+  {
+    "file": "tests/legacy/verification_test.cpp",
+    "source_sha256": "618dfa742c9dc5b1ee92c2acfbed5bd5d0f9c20f489a9352ba5f864ca599f627",
+    "copy_sha256": "618dfa742c9dc5b1ee92c2acfbed5bd5d0f9c20f489a9352ba5f864ca599f627",
+    "identical": true
+  }
+]

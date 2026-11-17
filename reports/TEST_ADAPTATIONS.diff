@@ -1,0 +1,10 @@
+--- original/analysis_ui_test.cpp
++++ publication/analysis_ui_test.cpp
+@@ -17,6 +17,7 @@
+     g.parser.feed("JS jumped 239.96712 units with a Long Jump", cmd);
+     g.parser.feed("VNL | 2 Strafes | 250 Pre", cmd);
+     g.analyses.resize(1);
++    ensure_attempt_ids(); // Direct Parser fixtures need the same IDs as the production log pump.
+     auto csv = build_csv(g.jumps);
+     for (bool classic : {false, true}) {
+         g.classicMenu = classic; apply_theme(); rebuild_fonts(); relayout();

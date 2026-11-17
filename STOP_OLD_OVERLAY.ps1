@@ -1,6 +1,12 @@
-param([int[]]$ProcessId = @())
+﻿param([int[]]$ProcessId = @())
 
 $ErrorActionPreference = 'Stop'
+$projectDirectory = [IO.Path]::GetFullPath($PSScriptRoot).TrimEnd('\')
+function Test-ProjectProcess($Candidate) {
+    try {
+        return [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($Candidate.Path)).TrimEnd('\') -ieq $projectDirectory
+    } catch { return $false }
+}
 
 # Only this application's known executable names; never stop CS2 or a compiler.
 $overlayNames = @('LJOverlay', 'LJOverlay_new', 'LJOverlay_update',
@@ -34,7 +40,7 @@ public static class LJOverlayShutdown {
 
 function Get-OldOverlays {
     @(Get-Process -Name $overlayNames -ErrorAction SilentlyContinue |
-        Where-Object { $ProcessId.Count -eq 0 -or $_.Id -in $ProcessId })
+        Where-Object { ($ProcessId.Count -eq 0 -or $_.Id -in $ProcessId) -and (Test-ProjectProcess $_) })
 }
 
 $targets = Get-OldOverlays
@@ -62,7 +68,7 @@ foreach ($target in $remaining) {
         # Check the identity again rather than terminating a potentially reused PID.
         $current = Get-Process -Id $target.Id -ErrorAction SilentlyContinue
         if (-not $current) { continue }
-        if ($current.ProcessName -notin $overlayNames -or $current.StartTime -ne $target.StartTime) {
+        if ($current.ProcessName -notin $overlayNames -or $current.StartTime -ne $target.StartTime -or -not (Test-ProjectProcess $current)) {
             throw "PID $($target.Id) changed identity; refusing termination."
         }
         Write-Output "[STOP] Graceful close did not finish; stopping PID $($target.Id)."

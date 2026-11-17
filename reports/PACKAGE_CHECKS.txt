@@ -1,0 +1,9 @@
+PASS production .cpp/.h copied byte-for-byte; legacy v1.1 verification_test.cpp preserved under tests/legacy. analysis_ui_test.cpp fixture ID initialization adapted in copy only; see TEST_ADAPTATIONS.diff.
+PASS every local C++ include dependency present.
+PASS 11 unchanged PCM16 WAVs; Godlike and Ownage match extracted originals byte-for-byte.
+PASS source page rechecked 2026-11-17: https://opengameart.org/content/announcer-kill-sounds ; Antti Saari / TripleSnail, CC BY 3.0, unchanged copies. Official CC BY 3.0 and CC0 pages checked; notices and full texts retained.
+PASS MIT source license © 2026 IKNLM; primary author/creator/owner and development-assistant distinction in AUTHORS.md and RU/EN READMEs.
+PASS BUILD_EXE.bat uses winmm; shutdown helper scoped to this directory; CI builds/tests only, no repository/release write permission.
+PASS copied generate_sounds.py reproduces all 9 procedural WAVs byte-for-byte while preserving the two bundled announcer WAVs; no scratch sound_source dependency.
+PASS clean source tree: no binaries, compiler/test debris, personal logs/settings/CSVs/history, archives, backups, old releases or .git metadata. Only sample_jump_console.log is retained as the documented synthetic fixture.
+PASS 405 original non-runtime files unchanged; original running overlay not stopped.

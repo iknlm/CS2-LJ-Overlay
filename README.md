@@ -1,53 +1,38 @@
-# CS2 LJ Overlay — v1.1 Community Edition
+# CS2 LJ Overlay
 
-**Created and maintained by [IKNLM](https://github.com/iknlm).**  
-Development assistance: **Claude (Anthropic), ChatGPT (OpenAI), Codex (OpenAI)**.
+## DOWNLOAD FOR WINDOWS
 
-A lightweight **Windows x64** WinAPI/GDI HUD for CS2KZ / CYBERSHOKE jump stats. It reads CS2's `console.log` when the game is launched with `-condebug`; it does **not** inject into the game.
+1. Download [LJOverlay_v1.2_win64.zip](https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/LJOverlay_v1.2_win64.zip).
+2. Extract the archive.
+3. Run `LJOverlay_new.exe`.
+4. Configure the `console.log` path if needed.
 
-## Screenshots / Скриншоты
+**No compiler, MSYS2, Python or developer tools are required for normal use.**
+Keep `sounds/` next to the EXE. Add `-condebug` to CS2 launch options, restart
+CS2 and use windowed/borderless mode. If needed, set the log path in INS -> 9 -> 10.
+Use the ZIP for a first installation. The separate EXE can update an existing
+installation but does not include the optional external sounds.
 
-Real HUD captures from CS2 sessions (counters and settings may differ between versions).
+[Release v1.2](https://github.com/iknlm/CS2-LJ-Overlay/releases/tag/v1.2) |
+[Separate EXE](https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/LJOverlay_new.exe) |
+[Checksums](https://github.com/iknlm/CS2-LJ-Overlay/releases/download/v1.2/SHA256SUMS.txt)
 
-**Classic CS 1.6 / GoldSrc** — olive palette, compact tables and rank colors:
 
-![CS2 LJ Overlay in classic CS 1.6 theme](docs/screenshots/hud-cs16.png)
+Standalone Windows x64 WinAPI/GDI HUD for CS2 CYBERSHOKE jump statistics.
+Current source: v1.2, including full console import,
+custom success thresholds, personal goals, player names and persistent attempt IDs.
 
-**Modern** — the same jump statistics with the modern dark theme:
+**Primary author, creator and owner: IKNLM.**
+**MIT License © 2026 IKNLM.** Claude, ChatGPT and Codex are development assistants only.
 
-![CS2 LJ Overlay in Modern theme](docs/screenshots/hud-modern.png)
+- [Russian documentation](README_RU.md)
+- [English documentation](README_EN.md)
+- [Build and tests](TESTING.md)
+- [Changelog](CHANGELOG.md)
+- [Author credits](AUTHORS.md) and [third-party notices](THIRD_PARTY_NOTICES.md)
+- [Release verification](reports/RELEASE_V1_2_VERIFICATION.txt) and [local preparation report](GITHUB_READY_REPORT.txt)
 
-## Features
+![Modern HUD with player history](screenshots/players_modern.png)
 
-- Jump distance, strafes, sync, Pre/Max Speed, JumpEdge, DeadAir, Deviation, and key/mouse timeline.
-- VNL and CKZ/KZT jump rank evaluation, with CYBERSHOKE rank colors.
-- Configurable minimum successful rank: Impressive, Perfect, Godlike, Ownage or Wrecker (default: Perfect).
-- Manual results: **F6** successful, **F7** unsuccessful, **F8** return to automatic evaluation.
-- Session counts, attempt history, comparison of successes and failures, CSV export.
-- Two themes for the **same HUD**: Modern and classic CS 1.6 / GoldSrc. Inline settings via **INS**; no separate menu window.
-- Optional CS 1.6-style sounds and announcers, **disabled by default** on new installations.
-
-## Quick start
-
-1. Download `LJOverlay_v1.1_CommunityEdition_win64_MIT.zip` from **Releases** and extract the whole archive to a writable folder.
-2. In Steam, set CS2 launch options to `-condebug`. Use borderless/windowed mode for the external overlay.
-3. Start `LJOverlay_new.exe`. Keep its `sounds/` folder next to it.
-4. Press **INS** to open settings and change theme, size, opacity, visible panels, minimum successful rank or sounds.
-
-Additional shortcuts: **F9** lock/unlock overlay; **Home** hide/show; **Ctrl+End** quit.
-
-For setup and detailed usage, see [README_RU.txt](README_RU.txt) or [README_EN.txt](README_EN.txt).
-
-## Building from source
-
-Install **MSYS2 UCRT64 GCC** with a C++20 compiler, then run `BUILD_EXE.bat` from the repository root. The resulting `LJOverlay_new.exe` is the Windows build. Parser and Windows GUI tests are in `verification_test.cpp` and related test files.
-
-## Credits and license
-
-- **Original author and project maintainer: IKNLM**.
-- Development acknowledgments: **Claude**, **ChatGPT**, **Codex**. See [AUTHORS.md](AUTHORS.md).
-- Application source code: **MIT License** — © 2026 IKNLM. See [LICENSE](LICENSE). You may reuse and modify it provided the copyright and license notice are retained.
-- Sounds: separately licensed under CC BY 3.0 / CC0, as specified in [SOUND_CREDITS.txt](SOUND_CREDITS.txt). This includes attribution obligations for the CC BY files.
-- Not affiliated with Valve, Counter-Strike, or CYBERSHOKE. Game names and marks belong to their owners.
-
-**Testing note:** Automated Windows build and regression tests have been reported successful; real input/audio behavior in an active CS2 session must be checked on the target machine.
+Reads console.log; no injection or game process modification. Synthetic test screenshot.
+Download the ready-to-run Windows package from Releases. The Code tab is for source and development. The v1.1 release is retained.

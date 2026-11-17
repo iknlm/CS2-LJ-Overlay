@@ -1,0 +1,14 @@
+PlaySoundW ASYNC accepted: Godlike (354112 bytes, 176400 bytes/sec)
+PlaySoundW ASYNC accepted: Ownage (308448 bytes, 176400 bytes/sec)
+PlaySoundW ASYNC accepted: achievement (44982 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: error (12348 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: success (23814 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: tick (1586 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: wpn_denyselect (11466 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: wpn_hudoff (11466 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: wpn_hudon (11466 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: wpn_moveselect (2204 bytes, 88200 bytes/sec)
+PlaySoundW ASYNC accepted: wpn_select (7054 bytes, 88200 bytes/sec)
+PASS: all six rank events, changed marks, historical import/reread, live award, UPD and idle deduplication, zero awards, missing WAV directory.
+PASS: PCM scaling, zero master/menu, disabled, Modern, missing name, throttle, replay mute, INI, unchanged F6/F7/F8.
+Playback API success does not prove audible output on physical speakers.

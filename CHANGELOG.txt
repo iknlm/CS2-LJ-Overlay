@@ -1,58 +1,40 @@
-﻿v1.1 Community Edition — локальный релиз
-- Звуки по умолчанию выключены; явное enabled=1 сохраняется.
-- Секция sound в новом INI; проверки громкости; документация RU/EN.
-- Система успешности и HUD не изменены.
+# Changelog
 
-Ниже исторический журнал; прежние описания не являются текущей инструкцией.
+## v1.2 (2026-11-17)
 
-LJ OVERLAY v1.1 — COMMUNITY EDITION: настраиваемая успешность
-- Пять минимальных удачных рангов в существующем меню HUD; по умолчанию Perfect.
-- Единая автоматическая оценка обновляет текущую историю, счётчики, средние и CSV.
-- Ручные F6/F7 имеют приоритет, F8 возвращает оценку по выбранному порогу.
-- Параметр [overlay] success_rank сохраняется в INI и загружается при запуске.
-- Таблицы дистанций, парсер, цвета рангов и исходные данные прыжков сохранены.
-- Windows-сборка: BUILD_EXE.bat / LJOverlay_new.exe.
+- Full byte-zero console.log import and live shared reading with rotation,
+  truncation, partial UTF-8 lines, source selection and replay protection.
+- Stable attempt selection, analysis, manual direction annotations and comparison.
+- Custom decimal success thresholds and independent goals per jump type/mode;
+  exact remaining-distance calculations, reached states and Near warnings.
+- Player names in the header/history/analysis, Unicode-safe compact display,
+  bracketed mode headers, mixed-player/type/mode identity handling.
+- Persistent current-session snapshot with names, IDs, marks and import keys;
+  CSV now includes attempt_id alongside the existing player-name column.
 
-Предыдущие изменения (история проекта):
+### Publication preparation (2026-11-17)
 
-LJ Overlay Modern Menu — изменения
+- Selected the newest tested source by code, hashes, dates and build evidence,
+  rather than using the older v1.1 CommunityEdition/release snapshots.
+- Source code licensed MIT © 2026 IKNLM as instructed by the project owner;
+  development assistants credited separately from primary authorship.
+- Preserved CC BY 3.0/CC0 asset notices and compiler-runtime license texts.
+- Added current RU/EN documentation, a test runner, provenance and readiness reports.
+- Updated the build workflow for all headers/resources and winmm linkage.
+- Restricted the copied shutdown helper to executables inside this copy's folder.
+- Excluded personal settings/history/logs, old binaries/packages and test debris.
+- The publication request now authorizes main and a separate v1.2 release, while preserving v1.1.
 
-- Отдельная панель LJ CONTROL в новом тёмном оформлении (GDI/WinAPI).
-- Открытие через INS / ПКМ; управление пунктами 1–9 / 0, Esc, мышью.
-- Главное меню, история, отображение, сессия, подтверждения.
-- Возможность выбрать один из 6 последних прыжков и изменить его отметку.
-- Основной HUD: три крупные карточки-счётчика LJ / Удачные / Неудачные.
-- История HUD: явная колонка результата OK / NO / ·.
-- Возможность скрыть подробную вторую строку плиток (show_details).
-- Управление прозрачностью, строками истории и положением справа.
-- Меню независимо от закрепления HUD и кликабельное даже в locked=1.
-- Сохранены формат JumpStats, VNL-парсер, таблицы, таймлайн, CSV, F6/F7/F8.
-- Встроенные настройки menu=INS, show_details=1.
+## v1.1 Community Edition - historical
 
-Ограничения проверки: gcc -DLJ_TEST успешно прошёл на тестовом LJ-логе;
-Windows GUI не компилировался в Linux-окружении без MinGW/WinAPI SDK.
+- User-selectable minimum success rank with automatic history/CSV reevaluation.
+- Modern/CS 1.6 themes, inline settings, manual marks and sound preferences.
+- Sounds disabled by default, with separate menu/award volumes.
 
-Проверка Windows / доработка меню:
-- Исправлены std::max(int, LONG) и типы WinAPI-ресурсов без UNICODE.
-- Меню: оливковая палитра и золотые акценты CS 1.6.
-- Вся история страницами по 6: колесо, PgUp/PgDn; выбор не сдвигается новыми прыжками.
-- Счётчики открытого меню обновляются при чтении лога и глобальных отметках.
-- Парсер, Tailer, показатели VNL, CSV и горячие клавиши сохранены.
+Existing published v1.1 artifacts are not changed by this preparation.
 
-Автоматические ранги / два стиля меню:
-- 12 таблиц порогов VNL и CKZ/KZT, шесть рангов; неизвестный Mode не угадывается.
-- Отдельное ручное переопределение; F8 возвращает автоматический итог, обновления лога сохраняют отметку.
-- Ранг у дистанции и в обеих историях; отдельный оранжевый итог BAD, автоматические счётчики.
-- WH_KEYBOARD_LL в отдельном потоке, PostMessage и обязательный CallNextHookEx, без двойного опроса клавиатуры.
-- Классическое WinAPI popup-меню, переключение в обе стороны и menu_style в INI.
-- CSV: сохранены исходные столбцы, добавлены ранг и ручная_отметка.
-- Парсер, Tailer, таблицы стрейфов, таймлайн и jump_summary сохранены.
-- Границы, ручные отметки, меню и callback проверяются verification_test.cpp; детали в VERIFICATION_RU.txt.
+Publication-copy test adaptation: `analysis_ui_test.cpp` assigns IDs to its
+direct Parser fixture before recording its baseline CSV, matching the v1.2
+production log pump. The assertions are retained; see `reports/TEST_ADAPTATIONS.diff`.
 
-Меню CS 1.6: убран стандартный Windows popup, один GDI-интерфейс и общие действия для обоих стилей. Компактные строки и подразделы без карточек/счётчиков; стрелки, Enter, Esc, цифры и мышь. Переключатель Modern / CS 1.6 во всех разделах, сохранение в INI. HUD и статистика не изменены.
-
-Критическое исправление запуска меню: завершён старый процесс LJOverlay_before_menu; прежние EXE отключены расширением .disabled. CS 1.6 выбран в INI по умолчанию. Переключение обоих стилей на пункте 9 главной; INS перечитывает INI. Компактный размер 430x380 отделён от масштаба HUD. Оба режима проверены на production EXE с PrintWindow-снимками и перезапуском (RUNTIME_MENU_LOG.txt).
-
-Один HUD / две темы: удалены создание второго окна и MenuWndProc. Style теперь оформляет весь HUD (Modern или GoldSrc/CS1.6). Встроены настройки и мышиные −/+ для Scale/Opacity. Сохранение style/scale/opacity/toggles и миграция menu_style. Сохранены parser/ranks/CSV/Tailer/hotkeys и порядок статистических блоков.
-
-BUILD_EXE.bat: добавлен STOP_OLD_OVERLAY.ps1 — автоматическое штатное закрытие старых оверлеев перед компиляцией, затем принудительная остановка с проверкой PID/имени/времени запуска. При Access denied сборка прекращается с указанием запуска батника от администратора.
+Windows player distribution: ready EXE, sounds, clean INI example, RU/EN player instructions and per-asset SHA256. No compiler required for normal use.

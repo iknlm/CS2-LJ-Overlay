@@ -1,0 +1,77 @@
+HISTORICAL PREPARATION REPORT: current v1.2 release verification is reports/RELEASE_V1_2_VERIFICATION.txt.
+
+GITHUB READY REPORT — CS2 LJ Overlay v1.2
+
+НАЗНАЧЕНИЕ
+Чистая папка: CS2-LJ-Overlay_GITHUB_READY.
+./ — её корень, SOURCE_PROJECT — исходная рабочая папка LJOverlay_ModernMenu_FIX2.
+Личные абсолютные пути исключены из публикуемых материалов.
+Физическое расположение локальной копии не является частью публикации.
+
+АКТУАЛЬНАЯ ВЕРСИЯ
+Выбран рабочий корень с полным импортом console.log, разбором/сравнением,
+персональными порогами и целями, именами игроков и сохранением ID.
+Сверены 10 вариантов исходников/архивов, даты, SHA256, сборки и тесты.
+Старая v1.1 не использована вместо новой версии и не изменена.
+См. reports/SOURCE_SELECTION_RU.txt, SOURCE_CANDIDATES.json, SOURCE_HASHES.json.
+
+КОМПЛЕКТ
+Все актуальные cpp/h и текущие тесты; старый тест v1.1 отдельно в tests/legacy.
+BUILD_EXE.bat, STOP_OLD_OVERLAY.ps1, RUN_NEW.bat, RUN_TESTS.ps1,
+smoke-скрипты, генератор звуков и синтетическая sample_jump_console.log.
+11 WAV в sounds/, все лицензии звуков и runtime-уведомления в licenses/.
+README RU/EN, AUTHORS.md, LICENSE, CHANGELOG.md, TESTING.md,
+VERIFICATION_RU.txt, FINAL_PUBLICATION_CHECK.txt, отчёты и 19 PNG интерфейса.
+docs/CODEX_TASK.txt, AGENTS.md, .gitignore, .gitattributes и build/test workflow.
+SHA256SUMS.txt содержит хеши всех файлов, кроме самого манифеста.
+
+ИСКЛЮЧЕНО
+EXE, DLL, объектные и временные файлы, старые архивы/резервные копии,
+личные console.log, lj_overlay.ini, lj_history.dat, lj_jumps/ и пользовательские CSV.
+Тестовые INI/CSV/логи и BMP не включены. Единственный .log —
+синтетическая parser-фикстура sample_jump_console.log.
+EXE собирается через BUILD_EXE.bat, а не хранится в исходном репозитории.
+Старый prepare_release.py для v1.1 и устаревший LICENSE_STATUS.txt не включены.
+
+АВТОРСТВО
+IKNLM — основной автор, создатель и владелец.
+MIT © 2026 IKNLM.
+Claude, ChatGPT и Codex — исключительно помощники разработки.
+Звуки Godlike/Ownage: Antti Saari / TripleSnail, CC BY 3.0.
+Девять процедурных эффектов: CC0. Все лицензии звуков сохранены.
+
+ИЗМЕНЕНИЯ ПОДГОТОВКИ
+Рабочие исходники приложения и заголовки перенесены без изменения.
+Ранее адаптирована подготовка ID в фикстуре analysis_ui_test.cpp до CSV baseline,
+без ослабления утверждений: reports/TEST_ADAPTATIONS.diff.
+Сборочный helper ограничен своей папкой. Workflow учитывает winmm и тесты.
+Генератор не требует scratch-папки sound_source.
+
+В текущем исправлении восстановлены русские документы, символы навигации,
+кодировки журналов и нейтральные пути в отчётах.
+Ни один cpp/h, WAV или PNG не изменён.
+Повреждённые копии журналов восстановлены из строгого декодирования UTF-16LE.
+Пересчитан SHA256SUMS.txt. Итог: FINAL_PUBLICATION_CHECK.txt.
+
+РЕЗУЛЬТАТЫ
+Предыдущая подготовка: PASS BUILD_EXE.bat, GCC 16.2.0, Windows x64 GUI.
+См. BUILD_LOG.txt и reports/BINARY_VERIFICATION.txt.
+Предыдущий полный прогон: PASS 10 текущих программ, отдельная загрузка
+звуковых настроек и проверка LJ_TEST. См. reports/TEST_RESULTS.txt.
+Текущий аудит: UTF-8, отсутствие личных путей, README-ссылки,
+наличие исходников, лицензий, скриптов и текущих тестов проверены повторно.
+Новая компиляция или прогон C++ при правке документов не заявляются.
+
+ОГРАНИЧЕНИЯ
+Основной EXE не запускался при подготовке копии из-за оригинального
+экземпляра и общего mutex. GUI-тесты выполнены.
+Физическая CS2, видимость поверх игры и слышимость динамиков не проверены.
+Workflow на GitHub не запускался; официальные WR не заявляются.
+
+Оригинальный проект не изменён. Git Push, создание репозитория и Release
+не выполнялись. Опубликованная v1.1 не изменена.
+
+НОВЫЙ АРХИВ
+Новый ZIP создаётся рядом с папкой и содержит её актуальные файлы.
+Архив не включён в исходное дерево. Проверяются CRC, состав,
+совпадение байтов и хеши по SHA256SUMS.txt.

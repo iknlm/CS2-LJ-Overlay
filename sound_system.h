@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2026 IKNLM
 ﻿// WinMM PCM playback. One process-local voice, no system mixer changes.
 static bool soundReplay = false;
 static std::map<std::string, std::vector<char>> soundAssets;

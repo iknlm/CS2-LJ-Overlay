@@ -1,0 +1,4 @@
+PASS no INI / generated DEFAULT_INI: sound disabled, 80/60/100
+PASS menu toggle/volume persistence and theme changes
+PASS bounds 0..100, explicit enabled=1 preserved
+PASS fresh process reload: enabled=1 master=30 menu=40 awards=50

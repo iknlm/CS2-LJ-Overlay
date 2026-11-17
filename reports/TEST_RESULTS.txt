@@ -1,0 +1,107 @@
+CS2 LJ Overlay v1.2 current regression suite; source copy; no production application startup.
+Historical v1.1 verification_test.cpp is retained in tests/legacy and excluded from this suite.
+PASS analysis_test
+PASS LJ VNL 219.07756 -> no next-rank message
+PASS LJ VNL 229.75 -> До Impressive: 0.25u
+PASS LJ VNL 234.60 -> До Perfect: 0.40u
+PASS LJ VNL 239.96712 -> До Godlike: 0.03288u
+PASS LJ VNL 244.80 -> До Ownage: 0.20u
+PASS LJ VNL 249.90 -> До Wrecker: 0.10u
+
+Sample concise report:
+Игрок: Неизвестный игрок · 239.97u · LJ · VNL · Направление не задано (лог не определяет)
+Результат: Perfect. До Godlike: 0.03u
+На стрейфе #2 Loss скорости 3, у остальных вместе 0.3: потери сосредоточены здесь. Проверь этот участок по вводу. Недобор дистанции по Loss не рассчитывается.
+
+PASS 720 all-mode/all-type rank boundary checks incl. nextafter at 0.50; six requested examples; metric comparisons; <=3 observations; missing data; no distance-from-Loss claims
+PASS review_model_test
+PASS directions unknown/straight/right/left; terminal Sync=0/Loss with uncertainty; numbered last strafe; Gain normalized by Airtime and GainEff; real -nan parser; source precision; pair metrics/strafe rows; unequal counts; incomplete/NaN comparison; different modes/directions
+PASS analysis_ui_test
+PASS Modern/CS16 collapse/render; partial AND complete table wait for block end; NEW finalizes prior; pinned selected report on incoming NEW; Unicode clipboard matches selected attempt; no conclusions for incomplete blocks; scrolling; cached once; CSV unchanged; F6/F7/F8 latest; locked hit test; session reset
+PASS console_log_test
+PASS full initial history, chronology/timestamps, all metrics, -nan, duplicate timestamped blocks, replay/reinitialized Tailer, marks/selection/CSV retained, historical commands ignored
+PASS live partial header, split UTF-8/newline, late block continuation, row/key upserts, analysis invalidation, distinct equal-valued attempts
+PASS clear/truncate/deletion/recreation, same-inode truncate/regrow and replacement identity, preserved existing history
+PASS concurrent writer remains open, sharing error/recovery, cold restart imports current file once
+PASS compact JS input, unknown mode stays unknown, compact echo does not duplicate/degrade detailed record
+PASS missing first Sync metric preserves available Gain/Loss without inventing a zero
+PASS large history 11551030 bytes, byte zero through EOF in bounded polls, first/last jumps recovered; idle polls do not reread content
+PASS file import of all six ranked types x VNL/CKZ/KZT; unknown mode is not inherited
+PASS same-second session import selects an unused CSV name and preserves the existing archive
+PASS all console reader/import integration tests
+PASS console_gui_test
+Saved console_modern_error.bmp: 625x633, pixel hash 6664817428040323837
+Saved console_modern_connected.bmp: 625x832, pixel hash 7667596316425787793
+Saved console_modern_reading.bmp: 625x974, pixel hash 14289616693427472251
+Saved console_modern_live.bmp: 625x760, pixel hash 17992607795658539161
+Saved console_cs16_live.bmp: 717x711, pixel hash 12280840881973962142
+Saved console_cs16_error_settings.bmp: 717x1028, pixel hash 10689911076077836036
+PASS actual GDI statuses LOG ERROR/LOG CONNECTED/READING HISTORY/LIVE; both themes; expected source + condebug guide; inline Unicode path typing including digits, Enter/Escape, INI persistence, clipboard selection, invalid input; source switch retains selected history; exactly one window
+PASS goals_test
+PASS all 18 combinations: rank/custom success, below/equal/above, above Wrecker, exact decimals, Near boundary, WR manual, isolated INI roundtrip
+PASS history recalculation; manual overrides; F8 auto; changing target preserves CSV and counters
+PASS inline editing, +0.1/-0.1, invalid values rejected, Escape cancels
+GDI snapshot goals_modern.bmp 500x833
+GDI snapshot goals_modern_progress.bmp 500x611
+GDI snapshot goals_modern_reached.bmp 500x611
+GDI snapshot goals_cs16.bmp 590x758
+GDI snapshot goals_cs16_progress.bmp 590x544
+GDI snapshot goals_cs16_reached.bmp 590x544
+PASS real WinAPI/GDI both themes: settings, remaining, reached; closed menu ignores numbers; one HUD
+PASS players_test
+PASS exact sample names/distances/types; bracket CKZ/KZT; mixed players/equal distances; Unicode/special/long nicknames; anonymous compact stays unknown; CSV name+ID and report
+PASS snapshot cold restore name+original ID+marks+metrics, replay/import/reinitialized Tailer and repeated stamped header without duplicates
+PASS restore with missing console; corrupted snapshot rejected without partial mutation
+PASS filtered foreign header/details and unnamed summary cannot rename/update last user jump
+PASS equal source/header/time/player/distance/type in three different modes remains three attempts; shifted replay resolves by mode without duplicates
+GDI snapshot players_modern.bmp 500x686
+GDI snapshot players_modern_analysis.bmp 500x812
+GDI snapshot players_modern_long.bmp 500x686
+GDI snapshot players_modern_long_analysis.bmp 500x840
+GDI snapshot players_modern_unknown.bmp 500x667
+GDI snapshot players_cs16.bmp 590x621
+GDI snapshot players_cs16_analysis.bmp 590x738
+GDI snapshot players_cs16_long.bmp 590x621
+GDI snapshot players_cs16_long_analysis.bmp 590x764
+GDI snapshot players_cs16_unknown.bmp 590x601
+PASS actual GDI both themes: selected matching name/type/ID, history player column, analysis player, Unicode-safe ellipsis and unknown player
+PASS explicit new session persists empty history without reusing IDs
+PASS review_gui_test
+Saved review_modern_latest.bmp: 625x760, pixel hash 17992607795658539161
+Saved review_modern_godlike.bmp: 625x791, pixel hash 5391329421538352640
+Saved review_modern_diagonal.bmp: 625x919, pixel hash 13948408142579260725
+Saved review_cs16_diagonal.bmp: 717x854, pixel hash 5556190946719393293
+Saved review_cs16_compare.bmp: 717x840, pixel hash 3135006470274786449
+Saved review_cs16_near.bmp: 717x681, pixel hash 17168793646785583773
+Saved review_modern_compare_strafes.bmp: 625x972, pixel hash 14673421871215820912
+Saved review_modern_strafe_diff.bmp: 625x972, pixel hash 8285618344060469431
+PASS actual GDI/PrintWindow pixels and text/fonts: Godlike after Meh changes main distance/rank/tiles/table/timeline source/analysis; sticky IDs on NEW; latest and Near Rank; right/left directions; pair via history; unequal strafe counts; both themes; F6/F7/F8 latest and separate old mark; locked click-through, INS editing, PgUp/PgDn/wheel; IDs never reused across session clear
+PASS sound_settings_test
+PASS no INI / generated DEFAULT_INI: sound disabled, 80/60/100
+PASS menu toggle/volume persistence and theme changes
+PASS bounds 0..100, explicit enabled=1 preserved
+PASS fresh process reload: enabled=1 master=30 menu=40 awards=50
+PASS sound_test
+
+PASS LJ_TEST sample_jump_console.log
+jumps: 1
+summary: JS | LJ: 231.3 | 2 Strafes (81.5%) | 250.0 / 290.9 Speed | 3.5 JumpEdge | +3.8 W
+
+ИГРОК              итог    дист  ранг        стр    синк    пре   макс    эдж    овлп     дэд      W
+JS            LJ     NO  231.30  Impressive    2   81.5%  250.0  290.9   3.50       —       —  +3.80
+
+#    синк    гейн    лосс   время    углы    овлп     дэд  ширина
+1   82.4%  +10.37   -0.30   50.0%    2.0%    0.0%    0.0%   16.0°
+2   80.6%   +8.52   -0.00   50.0%    3.0%    0.0%    0.0%   16.5°
+
+                 дист    синк    пре   макс    эдж    овлп     дэд    углы
+удачные 0           —       —      —      —      —       —       —       —
+неудачные 1    231.30   81.5%  250.0  290.9   3.50       —       —       —
+LEFT KEY    |LLLLLLLLL
+RIGHT KEY   |RRRRRRRRR
+LEFT MOUSE  |MMMMMMMMM
+RIGHT MOUSE |mmmmmmmmm
+
+csv bytes 552, lines 2
+PASS all 10 current test executables, sound settings fresh-process reload, and parser-only fixture.
+No test of physical CS2 interaction or speaker audibility. Sound test exercises actual PlaySoundW calls.

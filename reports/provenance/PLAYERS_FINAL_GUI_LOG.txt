@@ -1,0 +1,25 @@
+PASS exact sample names/distances/types; bracket CKZ/KZT; mixed players/equal distances; Unicode/special/long nicknames; anonymous compact stays unknown; CSV name+ID and report
+PASS snapshot cold restore name+original ID+marks+metrics, replay/import/reinitialized Tailer and repeated stamped header without duplicates
+PASS restore with missing console; corrupted snapshot rejected without partial mutation
+PASS filtered foreign header/details and unnamed summary cannot rename/update last user jump
+GDI snapshot players_modern.bmp 500x686
+GDI snapshot players_modern_analysis.bmp 500x812
+GDI snapshot players_modern_long.bmp 500x686
+GDI snapshot players_modern_long_analysis.bmp 500x840
+GDI snapshot players_modern_unknown.bmp 500x667
+GDI snapshot players_cs16.bmp 590x621
+GDI snapshot players_cs16_analysis.bmp 590x738
+GDI snapshot players_cs16_long.bmp 590x621
+GDI snapshot players_cs16_long_analysis.bmp 590x764
+GDI snapshot players_cs16_unknown.bmp 590x601
+PASS actual GDI both themes: selected matching name/type/ID, history player column, analysis player, Unicode-safe ellipsis and unknown player
+PASS explicit new session persists empty history without reusing IDs
+Saved review_modern_latest.bmp: 625x760, pixel hash 17992607795658539161
+Saved review_modern_godlike.bmp: 625x791, pixel hash 5391329421538352640
+Saved review_modern_diagonal.bmp: 625x919, pixel hash 13948408142579260725
+Saved review_cs16_diagonal.bmp: 717x854, pixel hash 5556190946719393293
+Saved review_cs16_compare.bmp: 717x840, pixel hash 3135006470274786449
+Saved review_cs16_near.bmp: 717x681, pixel hash 17168793646785583773
+Saved review_modern_compare_strafes.bmp: 625x972, pixel hash 14673421871215820912
+Saved review_modern_strafe_diff.bmp: 625x972, pixel hash 8285618344060469431
+PASS actual GDI/PrintWindow pixels and text/fonts: Godlike after Meh changes main distance/rank/tiles/table/timeline source/analysis; sticky IDs on NEW; latest and Near Rank; right/left directions; pair via history; unequal strafe counts; both themes; F6/F7/F8 latest and separate old mark; locked click-through, INS editing, PgUp/PgDn/wheel; IDs never reused across session clear

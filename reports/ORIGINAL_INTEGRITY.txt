@@ -1,0 +1,5 @@
+PASS 405 existing non-runtime original files match their pre-task SHA256 fingerprints.
+PASS no new non-runtime files created inside the original project.
+Personal runtime INI/CSV/history.dat were excluded from fingerprinting because the original overlay remains running.
+Original overlay PID 31688 remained running throughout the copied build and test suite.
+No original build/test/script was executed. No original files were deleted.

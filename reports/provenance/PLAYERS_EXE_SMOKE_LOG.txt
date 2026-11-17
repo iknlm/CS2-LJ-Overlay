@@ -1,0 +1,2 @@
+PASS final Windows x64 EXE: exact named LJ/MBH, suffix CKZ/KZT, equal distances/different players, Unicode, anonymous unknown, CSV names + IDs, two restarts with stable IDs/no duplicates, rotated log retains four old attempts and adds correct fifth player, LJOverlayWnd, clean exit 0.
+Artifacts: SOURCE_PROJECT/players_exe_smoke_20261117_163259_109

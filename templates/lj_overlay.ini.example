@@ -1,0 +1,42 @@
+; Optional clean configuration template. Copy to lj_overlay.ini.
+; No compiler is required to run the EXE. Keep sounds/ beside it.
+[overlay]
+log=
+player=
+style=modern
+scale=0
+opacity=250
+history_rows=5
+x=right
+y=40
+locked=0
+show_strafes=1
+show_keys=1
+show_history=1
+show_compare=1
+show_details=1
+success_rank=perfect
+
+[sound]
+enabled=0
+master=80
+menu=60
+awards=100
+
+[hotkeys]
+good=F6
+bad=F7
+clear=F8
+lock=F9
+hide=HOME
+menu=INS
+quit=CTRL+END
+
+; Example per-type/mode preferences; other combinations use built-in defaults.
+[jump_VNL_LJ]
+success_mode=rank
+success_rank=perfect
+minimum=249.9
+goal_mode=0
+target=256.0
+wr_manual=
